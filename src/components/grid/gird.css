@@ -15,13 +15,13 @@
 }
 
 .grid-floor {
-  background-image: url("../../assets/floor.gif");
+  background-image: url("../../assets/img/floor.gif");
 }
 
 .grid-wall {
-  background-image: url("../../assets/wall.gif");
+  background-image: url("../../assets/img/wall.gif");
 }
 
 .grid-cracked-wall {
-  background-image: url("../../assets/cracked_wall.gif");
+  background-image: url("../../assets/img/cracked_wall.gif");
 }

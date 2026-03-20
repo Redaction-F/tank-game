@@ -89,7 +89,6 @@ function Self() {
       : ["R", "D", 360 - angle];
     const moreDirectionFullCount = 10;
     const lessDirectionFullCount = Math.ceil(Math.tan(miniAngle * Math.PI / 180) * 10);
-    console.log(`[Val]\n\tminiAngke: ${miniAngle}\n\tmoreFull: ${moreDirectionFullCount}\n\tlessFull: ${lessDirectionFullCount}`);
     let moreDirectionCount = 0;
     let lessDirectionCount = 0;
     moveAngle.current = [];
@@ -102,12 +101,11 @@ function Self() {
         moveAngle.current.push(lessDirection);
       }
     }
-    console.log(`[Val]\n\tmoveAngle: ${moveAngle.current}`);
     moveAngleIndex.current = 0;
   }, [angle])
 
   return (
-    <img className="self" style={{ bottom: y, left: x, transform: `rotate(${360 - angle}deg)` }} src="./src/assets/tank.gif" />
+    <img className="self" style={{ bottom: y, left: x, transform: `rotate(${360 - angle}deg)` }} src="./src/assets/img/tank.gif" />
   )
 }
 
