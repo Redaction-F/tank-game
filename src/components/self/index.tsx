@@ -44,20 +44,20 @@ function Self() {
 
   function moveByController() {
     if (controller.getRightPressed()) {
+      setAngle((pre) => (pre + 357) % 360);
+    }
+    if (controller.getLeftPressed()) {
+      setAngle((pre) => (pre + 3) % 360);
+    }
+    if (controller.getUpPressed()) {
       move(moveAngle.current[moveAngleIndex.current]);
       moveAngleIndex.current += 1;
       moveAngleIndex.current %= moveAngle.current.length;
     }
-    if (controller.getLeftPressed()) {
+    if (controller.getDownPressed()) {
       moveAngleIndex.current += moveAngle.current.length - 1;
       moveAngleIndex.current %= moveAngle.current.length;
       move(revDirection(moveAngle.current[moveAngleIndex.current]));
-    }
-    if (controller.getUpPressed()) {
-      setAngle((pre) => (pre + 3) % 360);
-    }
-    if (controller.getDownPressed()) {
-      setAngle((pre) => (pre + 357) % 360);
     }
   }
 
