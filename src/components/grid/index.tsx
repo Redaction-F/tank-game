@@ -1,72 +1,46 @@
 import { invoke } from "@tauri-apps/api/core";
-import "./gird.css"
 import { useEffect, useRef, useState } from "react";
-
-type Grid = "floor" | "wall" | "cracked_wall";
+import "./gird.css"
+import GridAround from "./GridAround";
+import GridMain from "./GridMain";
 
 function Grid() {
-  const firstRendering = useRef<boolean>(false);
-  const stage = useRef<Grid[][]>([]);
-  const numberOfRow = useRef<number>(0);
-  const numberOfCol = useRef<number>(0);
-  const [renderStage, setRenderStage] = useState<number>(0);
-
-  function setStage(value: Grid[][]) {
-    stage.current = value;
-    numberOfRow.current = stage.current.length;
-    numberOfCol.current = 
-      stage.current.length === 0
-      ? 0
-      : stage.current[0].length;
-    setRenderStage((prev) => 1 - prev);
-  }
+  const renderedFirst = useRef<boolean>(false);
+  const [stage, setStage] = useState<StageMap>({
+    map: [],
+    numberOfRow: 0,
+    numberOfCol: 0
+  });
 
   async function readStage(filename: string) {
-    setStage(await invoke<Grid[][]>("read_stage", { filename }));
+    const stageTmp: {
+      map: Grid[][],
+      numberOfRow: number,
+      numberOfCol: number,
+    } = {
+      map: [],
+      numberOfRow: 0,
+      numberOfCol: 0,
+    }
+    stageTmp.map = await invoke<Grid[][]>("read_stage", { filename });
+    stageTmp.numberOfRow = stageTmp.map.length;
+    stageTmp.numberOfCol = stageTmp.map.length === 0
+      ? 0
+      : stageTmp.map[0].length;
+    setStage(stageTmp);
   }
 
   useEffect(() => {
-    if (!firstRendering.current) {
+    if (!renderedFirst.current) {
       readStage("stage.json");
-      firstRendering.current = true;
+      renderedFirst.current = true;
     }
   }, []);
 
   return (
-    <div className="grid" key={renderStage}>
-      <div className="grid-row">
-        {
-          new Array(numberOfCol.current + 2).fill(true).map((_, col_index) => {
-            return <div className="grid-col grid-wall" id={String(col_index)} key={col_index}></div>
-          })
-        }
-      </div>
-      {
-        stage.current.map((row, row_index) => 
-          <div className="grid-row" id={String(row_index)} key={row_index}>
-            <div className={"grid-col grid-wall"}></div>
-            {
-              row.map((v, col_index) => {
-                return <div className={`grid-col ${
-                  v === "floor"
-                  ? "grid-floor"
-                  : v === "wall"
-                  ? "grid-wall"
-                  : "grid-cracked-wall"
-                }`} id={String(col_index)} key={col_index}></div>
-              })
-            }
-            <div className="grid-col grid-wall"></div>
-          </div>
-        )
-      }
-      <div className="grid-row">
-        {
-          new Array(numberOfCol.current + 2).fill(true).map((_, col_index) => {
-            return <div className={"grid-col grid-wall"} id={String(col_index)} key={col_index}></div>
-          })
-        }
-      </div>
+    <div className="grid">
+      <GridAround stage={stage} />
+      <GridMain stage={stage} />
     </div>
   )
 }

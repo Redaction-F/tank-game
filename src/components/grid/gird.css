@@ -4,6 +4,12 @@
   border: 5px solid #404040;
 }
 
+.grid-main {
+  position: absolute;
+  top: 37px;
+  left: 37px;
+}
+
 .grid-row {
   display: flex;
 }
