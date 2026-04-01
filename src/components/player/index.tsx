@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { PlayerLogic } from "./logic"
-import { GameManeger } from "../../logic";
+import { PlayerManeger } from "./logic"
+import { GameManeger } from "../../game_maneger/logic";
 import "./self.css"
 
+// プレイヤー
 function Player(props: {gameManeger: GameManeger}) {
-  const [rendering, setRendering] = useState<{
+  // プレイヤーの位置と角度
+  const [positionAndAngle, setPositionAndAngle] = useState<{
     x: number,
     y: number,
     angle: number
@@ -15,19 +17,21 @@ function Player(props: {gameManeger: GameManeger}) {
   });
   // コントローラーを読むsetIntervalの返り値
   const readController = useRef<number | null>(null);
-  const playerLogic: PlayerLogic = new PlayerLogic();
+  // プレイヤー管理
+  const playerManeger: PlayerManeger = new PlayerManeger();
 
   useEffect(() => {
+    // コントローラを定期的に読んで移動させる
     if (readController.current !== null) {
       clearInterval(readController.current);
       readController.current = null;
     }
     readController.current = setInterval(() => {
-      if (playerLogic.moveByController(props.gameManeger)) {
-        setRendering({
-          x: playerLogic.getX(),
-          y: playerLogic.getY(),
-          angle: 360 - playerLogic.getAngle(),
+      if (playerManeger.moveByController(props.gameManeger)) {
+        setPositionAndAngle({
+          x: playerManeger.getX(),
+          y: playerManeger.getY(),
+          angle: 360 - playerManeger.getAngle(),
         });
       }
     }, 20);
@@ -36,10 +40,11 @@ function Player(props: {gameManeger: GameManeger}) {
   return (
     <img 
       className="player" 
+      // 位置と角度を指定
       style={{ 
-        top: Math.floor(rendering.y), 
-        left: Math.floor(rendering.x), 
-        transform: `rotate(${Math.floor(rendering.angle)}deg)` 
+        top: Math.floor(positionAndAngle.y), 
+        left: Math.floor(positionAndAngle.x), 
+        transform: `rotate(${Math.floor(positionAndAngle.angle)}deg)` 
       }} 
       src="./src/assets/img/tank.gif" 
     />
