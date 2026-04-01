@@ -1,46 +1,32 @@
-import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useRef, useState } from "react";
-import "./gird.css"
+import { useEffect, useState } from "react";
+import { readStage, StageMap } from "./logic";
+import { GameManeger } from "../../logic";
 import GridAround from "./GridAround";
 import GridMain from "./GridMain";
+import "./gird.css"
 
-function Grid() {
-  const renderedFirst = useRef<boolean>(false);
-  const [stage, setStage] = useState<StageMap>({
+function Grid(props: {gameManeger: GameManeger}) {
+  const [stageMap, setStageMap] = useState<StageMap>({
     map: [],
     numberOfRow: 0,
     numberOfCol: 0
   });
 
-  async function readStage(filename: string) {
-    const stageTmp: {
-      map: Grid[][],
-      numberOfRow: number,
-      numberOfCol: number,
-    } = {
-      map: [],
-      numberOfRow: 0,
-      numberOfCol: 0,
+  useEffect(() => {
+    async function first() {
+      setStageMap(await readStage("stage.json"));
     }
-    stageTmp.map = await invoke<Grid[][]>("read_stage", { filename });
-    stageTmp.numberOfRow = stageTmp.map.length;
-    stageTmp.numberOfCol = stageTmp.map.length === 0
-      ? 0
-      : stageTmp.map[0].length;
-    setStage(stageTmp);
-  }
+    first();
+  }, []);
 
   useEffect(() => {
-    if (!renderedFirst.current) {
-      readStage("stage.json");
-      renderedFirst.current = true;
-    }
-  }, []);
+    props.gameManeger.collisionManeger.updateStageMap(stageMap);
+  }, [stageMap])
 
   return (
     <div className="grid">
-      <GridAround stage={stage} />
-      <GridMain stage={stage} />
+      <GridAround stage={stageMap} />
+      <GridMain gameManeger={props.gameManeger} stage={stageMap} />
     </div>
   )
 }

@@ -45,9 +45,4 @@ class Controller {
   }
 }
 
-const controller: Controller = new Controller();
-
-document.addEventListener("keydown", (e) => { controller.checkKeydown(e); }, false);
-document.addEventListener("keyup", (e) => { controller.checkKeyUp(e); }, false);
-
-export { controller, Controller };
+export { Controller };
