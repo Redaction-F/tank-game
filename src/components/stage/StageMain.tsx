@@ -1,14 +1,14 @@
-import { GameManeger } from "../../game_maneger/logic";
-import { StageMap } from "../../game_maneger/collision_maneger";
+import { GameManeger } from "../../logic";
+import { StageData } from "./logic";
 import Player from "../player";
 
 // ステージのメイン部分
-function StageMain(props: { gameManeger: GameManeger, stage: StageMap }) {
+function StageMain(props: { gameManeger: GameManeger, stage: StageData }) {
   return (
     <div className="grid-main">
       {/* ステージのメイン部分 */}
       {
-        props.stage.map.map((row, rowIndex) => 
+        props.stage.gridMap.map((row, rowIndex) => 
           <div className="grid-row" id={String(rowIndex)} key={rowIndex}>
             {
               row.map((v, colIndex) => {

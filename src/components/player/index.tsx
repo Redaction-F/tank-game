@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { PlayerManeger } from "./logic"
-import { GameManeger } from "../../game_maneger/logic";
+import { initPlayerManeger, PlayerManeger } from "./logic"
 import "./self.css"
+import { GameManeger } from "../../logic";
+import { invoke } from "@tauri-apps/api/core";
 
 // プレイヤー
 function Player(props: {gameManeger: GameManeger}) {
@@ -18,7 +19,10 @@ function Player(props: {gameManeger: GameManeger}) {
   // コントローラーを読むsetIntervalの返り値
   const readController = useRef<number | null>(null);
   // プレイヤー管理
-  const playerManeger: PlayerManeger = new PlayerManeger();
+  const playerManeger = useRef<PlayerManeger>(initPlayerManeger({
+    x: 0,
+    y: 0
+  }));
 
   useEffect(() => {
     // コントローラを定期的に読んで移動させる
@@ -26,12 +30,17 @@ function Player(props: {gameManeger: GameManeger}) {
       clearInterval(readController.current);
       readController.current = null;
     }
-    readController.current = setInterval(() => {
-      if (playerManeger.moveByController(props.gameManeger)) {
+    readController.current = setInterval(async () => {
+      const [playerManegerawaitRes, rendering] = await invoke<[PlayerManeger, boolean]>("move_by_controller", {
+        playerManeger: playerManeger.current, 
+        gameManeger: props.gameManeger
+      });
+      if (rendering) {
+        playerManeger.current = playerManegerawaitRes;
         setPositionAndAngle({
-          x: playerManeger.getX(),
-          y: playerManeger.getY(),
-          angle: 360 - playerManeger.getAngle(),
+          x: Math.floor(playerManeger.current.moveData.position.x),
+          y: Math.floor(playerManeger.current.moveData.position.y),
+          angle: Math.floor(playerManeger.current.moveData.angle),
         });
       }
     }, 20);
@@ -42,9 +51,9 @@ function Player(props: {gameManeger: GameManeger}) {
       className="player" 
       // 位置と角度を指定
       style={{ 
-        top: Math.floor(positionAndAngle.y), 
-        left: Math.floor(positionAndAngle.x), 
-        transform: `rotate(${Math.floor(positionAndAngle.angle)}deg)` 
+        top: positionAndAngle.y, 
+        left: positionAndAngle.x, 
+        transform: `rotate(${positionAndAngle.angle}deg)` 
       }} 
       src="./src/assets/img/tank.gif" 
     />
