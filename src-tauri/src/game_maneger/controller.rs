@@ -22,15 +22,6 @@ deserialize_struct!(
 );
 
 impl Controller {
-    pub fn new() -> Self {
-        Controller { 
-            right_pressed: false, 
-            left_pressed: false, 
-            down_pressed: false, 
-            up_pressed: false 
-        }
-    }
-
     pub fn check_key_down(&mut self, key: String) {
         match key.as_str() {
             "Right" | "ArrowRight" => {

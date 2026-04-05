@@ -27,16 +27,6 @@ deserialize_struct!(
 );
 
 impl CollisionManeger {
-    pub fn new() -> Self {
-        CollisionManeger { 
-            walls: Vec::new(), 
-            stage_size: Size { 
-                height: 0, 
-                width: 0 
-            } 
-        }
-    }
-
     pub fn update_stage(&mut self, stage: &StageData) {
         self.walls = Vec::new();
         stage

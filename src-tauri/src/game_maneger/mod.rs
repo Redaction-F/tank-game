@@ -12,11 +12,6 @@ mod controller;
 mod collision_maneger;
 
 #[tauri::command]
-pub fn game_maneger_init() -> GameManeger {
-    GameManeger::new()
-}
-
-#[tauri::command]
 pub fn check_key_down(mut controller: Controller, key: String) -> Controller {
     controller.check_key_down(key);
     controller
@@ -51,13 +46,6 @@ deserialize_struct!(
 );
 
 impl GameManeger {
-    fn new() -> Self {
-        GameManeger {
-            controller: Controller::new(),
-            collision_maneger: CollisionManeger::new()
-        }
-    }
-
     pub fn update_stage(&mut self, stage: &StageData) {
         self.collision_maneger.update_stage(stage);
     }
