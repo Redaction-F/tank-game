@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { CollisionManeger, Controller, GameManeger } from "./logic";
+import { Controller, GameManeger } from "./logic";
 import Stage from "./components/stage";
 import "./App.css";
 
@@ -31,10 +31,6 @@ function App() {
   useEffect(() => {
     // 初回のみ実行
     if (!firstRendering.current) {
-      const game_maneger_init = async () => {
-        setGameManeger(await invoke<GameManeger>("game_maneger_init"));
-      }
-      game_maneger_init();
       // キー入力に対するイベントを設定
       document.addEventListener("keydown", async (e: KeyboardEvent) => {
         gameManeger.current.controller = await invoke<Controller>("check_key_down", { controller: gameManeger.current.controller, key: e.key });

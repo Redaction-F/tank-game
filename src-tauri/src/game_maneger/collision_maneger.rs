@@ -134,7 +134,7 @@ fn min_f64(a: f64, b: f64) -> f64 {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct HitBox {
     position: Position,
     size: Size

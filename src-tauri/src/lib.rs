@@ -10,11 +10,12 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             stage::read_stage,
-            game_maneger::game_maneger_init,
             game_maneger::check_key_down,
             game_maneger::check_key_up,
             game_maneger::hit_wall,
-            move_maneger::move_by_controller
+            move_maneger::player_maneger_init,
+            move_maneger::move_by_controller,
+            move_maneger::bullet_create
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -1,8 +1,5 @@
 use crate::{
-    deserialize_struct, 
-    serialize_struct_camel,
-    game_maneger::{GameManeger, Key}, 
-    move_maneger::{Gear, MoveData, MoveManeger, TurnDirection}, 
+    deserialize_struct, game_maneger::{GameManeger, Key}, general::{Position, Size}, move_maneger::{Gear, MoveData, MoveManeger, MoveType, TurnDirection}, serialize_struct_camel 
 };
 
 pub struct PlayerManeger {
@@ -18,6 +15,24 @@ deserialize_struct!(
 
 impl PlayerManeger {
     const FIELDS: [&'static str; 1] = ["move_data"];
+
+    pub fn new() -> Self {
+        Self { 
+            move_data: MoveData { 
+                position: Position {
+                    x: 0.0,
+                    y: 0.0
+                }, 
+                angle: 0, 
+                size: Size { 
+                    height: 32, 
+                    width: 32 
+                }, 
+                move_type: MoveType::Hit, 
+                speed: 2.0 
+            } 
+        }
+    }
 
     pub fn move_by_controller(&mut self, game_maneger: &GameManeger) -> bool {
         let mut flag: bool = false;

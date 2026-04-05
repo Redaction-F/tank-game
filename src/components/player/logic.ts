@@ -11,25 +11,8 @@ type PlayerManeger = {
       height: 32,
     },
     moveType: "Hit",
-    speed: 2
+    speed: 2.0
   }
 }
 
-const initPlayerManeger = (position: Position): PlayerManeger => {
-  return {
-    moveData: {
-      // 位置
-      position,
-      // 角度
-      angle: 0,
-      size: {
-        width: 32,
-        height: 32,
-      },
-      moveType: "Hit",
-      speed: 2
-    }
-  }
-}
-
-export { initPlayerManeger, type PlayerManeger };
+export { type PlayerManeger };
