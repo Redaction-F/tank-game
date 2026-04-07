@@ -1,33 +1,25 @@
+use serde::{Deserialize, Serialize};
+
 use crate::{
-    deserialize_struct, game_maneger::{GameManeger, Key, KeyState}, general::{Position, Size}, move_maneger::{Gear, MoveData, MoveManeger, MoveType, TurnDirection, bullet_maneger::BulletManeger}, serialize_struct_camel 
+    game_maneger::{GameManeger, Key, KeyState}, 
+    general::{Position, Size}, 
+    move_maneger::{Gear, MoveData, MoveManeger, MoveType, TurnDirection, bullet_maneger::BulletManeger} 
 };
 
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all="camelCase")]
 pub struct PlayerManeger {
+    #[serde(alias="_moveData")]
     move_data: MoveData
 }
 
-serialize_struct_camel!(PlayerManeger, 1, move_data);
-deserialize_struct!(
-    PlayerManeger,
-    PlayerManegerVisitor,
-    move_data, MoveData, "moveData" | "_moveData"
-);
-
 impl PlayerManeger {
-    const FIELDS: [&'static str; 1] = ["move_data"];
-
     pub fn new() -> Self {
         Self { 
             move_data: MoveData { 
-                position: Position {
-                    x: 0.0,
-                    y: 0.0
-                }, 
+                position: Position::new(0.0, 0.0),
                 angle: 0, 
-                size: Size { 
-                    height: 32, 
-                    width: 32 
-                }, 
+                size: Size::new(32, 32), 
                 move_type: MoveType::Hit, 
                 speed: 2.0 
             } 

@@ -3,8 +3,6 @@ use std::f64::consts::PI;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    deserialize_struct, 
-    serialize_struct_camel, 
     game_maneger::{GameManeger, HitBox, HitDirection}, 
     general::{Position, Size}, 
     move_maneger::{bullet_maneger::BulletManeger, player_maneger::PlayerManeger}, 
@@ -30,19 +28,24 @@ pub fn bullet_move_forward(mut bullet_maneger: BulletManeger, game_maneger: Game
     (bullet_maneger, res)
 }
 
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all="camelCase")]
 struct MoveData {
-  // 位置
-  position: Position,
-  // 角度
-  angle: usize,
-  size: Size,
-  move_type: MoveType,
-  speed: f64,
+    // 位置
+    #[serde(alias="_position")]
+    position: Position,
+    // 角度
+    #[serde(alias="_angle")]
+    angle: usize,
+    #[serde(alias="_size")]
+    size: Size,
+    #[serde(alias="_moveType")]
+    move_type: MoveType,
+    #[serde(alias="_speed")]
+    speed: f64,
 }
 
 impl MoveData {
-    const FIELDS: [&'static str; 5] = ["position", "angle", "size", "move_type", "speed"];
-
     fn get_hit_box(&self) -> HitBox {
         HitBox::from((
             self.position.clone(),
@@ -51,8 +54,8 @@ impl MoveData {
     }
 
     fn move_diff(&mut self, d: Position) {
-        self.position.x += d.x;
-        self.position.y += d.y;
+        *self.position.get_x_mut() += d.get_x();
+        *self.position.get_y_mut() += d.get_y();
     }
 
     fn turn(&mut self, a: usize) {
@@ -72,17 +75,6 @@ impl MoveData {
         (self.angle as f64) / 180.0 * PI
     }
 }
-
-serialize_struct_camel!(MoveData, 5, position, angle, size, move_type, speed);
-deserialize_struct!(
-    MoveData,
-    MoveDataVisitor,
-    position, Position, "position" | "_position",
-    angle, usize, "angle" | "_angle",
-    size, Size, "size" | "_size",
-    move_type, MoveType, "moveType" | "_moveType",
-    speed, f64, "speed" | "_speed"
-);
 
 trait MoveManeger {
     fn get_move_data(&self) -> &MoveData;
@@ -129,16 +121,16 @@ trait MoveManeger {
         let speed: f64 = self.get_move_data().speed;
         let d: Position = match gear {
             Gear::Front => {
-                Position {
-                    x: speed * f64::cos(self.get_move_data().get_angle_rad()), 
-                    y: speed * f64::sin(self.get_move_data().get_angle_rad()),
-                }
+                Position::new(
+                    speed * f64::cos(self.get_move_data().get_angle_rad()), 
+                    speed * f64::sin(self.get_move_data().get_angle_rad()),
+                )
             }
             Gear::Back => {
-                Position {
-                    x: -1.0 * speed * f64::cos(self.get_move_data().get_angle_rad()), 
-                    y: -1.0 * speed * f64::sin(self.get_move_data().get_angle_rad()),
-                }
+                Position::new(
+                    -1.0 * speed * f64::cos(self.get_move_data().get_angle_rad()), 
+                    -1.0 * speed * f64::sin(self.get_move_data().get_angle_rad()),
+                )
             }
         };
         self.move_diff(d, game_maneger)
@@ -146,19 +138,22 @@ trait MoveManeger {
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all="camelCase")]
 enum MoveType {
   Hit,
   Bounce(BounceData)
 }
 
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all="camelCase")]
 struct BounceData {
+    #[serde(alias="_maxCount")]
     max_count: usize,
+    #[serde(alias="_count")]
     count: usize
 }
 
 impl BounceData {
-    const FIELDS: [&'static str; 2] = ["max_count", "count"];
-
     fn new(max_count: usize) -> Self {
         Self { 
             max_count, 
@@ -166,14 +161,6 @@ impl BounceData {
         }
     }
 }
-
-serialize_struct_camel!(BounceData, 2, max_count, count);
-deserialize_struct!(
-    BounceData,
-    BounceDataVisitor,
-    max_count, usize, "maxCount" | "_maxCount",
-    count, usize, "count" | "_count"
-);
 
 enum TurnDirection {
     Right,

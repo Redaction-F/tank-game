@@ -103,7 +103,7 @@ function Player(props: {
       {
         bulletManegers
           .filter((v) => v !== null)
-          .map((v, i) => (<Bullet 
+          .map((v) => (<Bullet 
             initBulletManeger={v.maneger} 
             gameManeger={props.gameManeger}
             addIntervalFunction={props.addIntervalFunction}

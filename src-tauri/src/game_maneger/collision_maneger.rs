@@ -3,28 +3,18 @@ use core::f64;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    deserialize_struct, 
-    serialize_struct_camel, 
     general::{Position, Size}, 
-    stage::{Grid, StageData},
+    stage::{Grid, StageData}
 };
 
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all="camelCase")]
 pub struct CollisionManeger {
+    #[serde(alias="_walls")]
     walls: Vec<HitBox>,
+    #[serde(alias="_stageSize")]
     stage_size: Size
 }
-
-impl CollisionManeger {
-    const FIELDS: [&'static str; 2] = ["walls", "stage_size"];
-}
-
-serialize_struct_camel!(CollisionManeger, 2, walls, stage_size);
-deserialize_struct!(
-    CollisionManeger,
-    CollisionManegerVisitor,
-    walls, Vec<HitBox>, "walls" | "_walls",
-    stage_size, Size, "stageSize" | "_stageSize"
-);
 
 impl CollisionManeger {
     pub fn update_stage(&mut self, stage: &StageData) {
@@ -43,31 +33,31 @@ impl CollisionManeger {
                     }))
             .flatten()
             .for_each(|grid_position| self.walls.push(HitBox::wall(grid_position)));
-        self.stage_size = Size { 
-            height: HitBox::WALL_SIZE.height * stage.get_grid_map().len(), 
-            width: HitBox::WALL_SIZE.width * stage.get_grid_map().get(0).map(|v| v.len()).unwrap_or_default()
-        }
+        self.stage_size = Size::new( 
+            HitBox::WALL_WIDTH * stage.get_grid_map().get(0).map(|v| v.len()).unwrap_or_default(),
+            HitBox::WALL_HEIGHT * stage.get_grid_map().len(), 
+        );
     }
 
     fn hit(a: &HitBox, b: &HitBox) -> HitDirection {
-        let stack_right: f64 = min_f64(a.position.x + a.size.width as f64, b.position.x + b.size.width as f64);
-        let stack_left: f64 = max_f64(a.position.x, b.position.x);
-        let stack_down: f64 = min_f64(a.position.y + a.size.height as f64, b.position.y + b.size.height as f64);
-        let stack_up: f64 = max_f64(a.position.y, b.position.y);
+        let stack_right: f64 = min_f64(a.position.get_x() + a.size.get_width() as f64, b.position.get_x() + b.size.get_width() as f64);
+        let stack_left: f64 = max_f64(a.position.get_x(), b.position.get_x());
+        let stack_down: f64 = min_f64(a.position.get_y() + a.size.get_height() as f64, b.position.get_y() + b.size.get_height() as f64);
+        let stack_up: f64 = max_f64(a.position.get_y(), b.position.get_y());
         let stack_width: f64 = stack_right - stack_left;
         let stack_height: f64 = stack_down - stack_up;
         if (stack_height > 0.0) && (stack_width > 0.0) {
             if stack_height >= stack_width {
-                let a_center_x: f64 = a.position.x + (a.size.width as f64) / 2.0;
-                let b_center_x: f64 = b.position.x + (b.size.width as f64) / 2.0;
+                let a_center_x: f64 = a.position.get_x() + (a.size.get_width() as f64) / 2.0;
+                let b_center_x: f64 = b.position.get_x() + (b.size.get_width() as f64) / 2.0;
                 if a_center_x >= b_center_x {
                     HitDirection::Right
                 } else {
                     HitDirection::Left
                 }
             } else {
-                let a_center_y: f64 = a.position.y + (a.size.height as f64) / 2.0;
-                let b_center_y: f64 = b.position.y + (b.size.height as f64) / 2.0;
+                let a_center_y: f64 = a.position.get_y() + (a.size.get_height() as f64) / 2.0;
+                let b_center_y: f64 = b.position.get_y() + (b.size.get_height() as f64) / 2.0;
                 if a_center_y >= b_center_y {
                     HitDirection::Down
                 } else {
@@ -91,13 +81,13 @@ impl CollisionManeger {
         if let Some(v) = hit_stage_wall {
             return v;
         }
-        if hit_box.position.x < 0.0 {
+        if hit_box.position.get_x() < 0.0 {
             return HitDirection::Right
-        } else if hit_box.position.x + hit_box.size.width as f64 > self.stage_size.width as f64 {
+        } else if hit_box.position.get_x() + hit_box.size.get_width() as f64 > self.stage_size.get_width() as f64 {
             return HitDirection::Left
-        } else if hit_box.position.y < 0.0 {
+        } else if hit_box.position.get_y() < 0.0 {
             return HitDirection::Down
-        } else if hit_box.position.y + hit_box.size.height as f64 > self.stage_size.height as f64 {
+        } else if hit_box.position.get_y() + hit_box.size.get_height() as f64 > self.stage_size.get_height() as f64 {
             return HitDirection::Up
         }
         HitDirection::NoHit
@@ -125,33 +115,26 @@ fn min_f64(a: f64, b: f64) -> f64 {
 }
 
 #[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all="camelCase")]
 pub struct HitBox {
+    #[serde(alias="_position")]
     position: Position,
+    #[serde(alias="_size")]
     size: Size
 }
 
-serialize_struct_camel!(HitBox, 2, position, size);
-deserialize_struct!(
-    HitBox,
-    HitBoxVisitor,
-    position, Position, "position" | "_position",
-    size, Size, "size" | "_size"
-);
-
 impl HitBox {
-    const FIELDS: [&'static str; 2] = ["position", "size"];
-    const WALL_SIZE: Size = Size {
-        height: 32,
-        width: 32
-    };
+    const WALL_WIDTH: usize = 32;
+    const WALL_HEIGHT: usize = 32;
 
     fn wall(grid_position: (usize, usize)) -> HitBox {
         HitBox {
-            position: Position { 
-                x: (Self::WALL_SIZE.width * grid_position.0) as f64, 
-                y: (Self::WALL_SIZE.height * grid_position.1) as f64 
-            },
-            size: Self::WALL_SIZE
+            position: Position::new( 
+                (Self::WALL_WIDTH * grid_position.0) as f64, 
+                (Self::WALL_HEIGHT * grid_position.1) as f64 
+            ),
+            size: Size::new(Self::WALL_WIDTH, Self::WALL_HEIGHT)
         }
     }
 }
@@ -165,7 +148,9 @@ impl From<(Position, Size)> for HitBox {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all="camelCase")]
 pub enum HitDirection {
     Right,
     Left,

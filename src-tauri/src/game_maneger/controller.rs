@@ -1,29 +1,19 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{deserialize_struct, serialize_struct_camel};
-
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all="camelCase")]
 pub struct Controller {
+    #[serde(alias="_right")]
     right: KeyState,
+    #[serde(alias="_left")]
     left: KeyState,
+    #[serde(alias="_down")]
     down: KeyState,
+    #[serde(alias="_up")]
     up: KeyState,
+    #[serde(alias="_space")]
     space: KeyState,
 }
-
-impl Controller {
-    const FIELDS: [&'static str; 5] = ["right", "left", "down", "up", "space"];
-}
-
-serialize_struct_camel!(Controller, 5, right, left, down, up, space);
-deserialize_struct!(
-    Controller,
-    ControllerVisitor,
-    right, KeyState, "right" | "_right",
-    left, KeyState, "left" | "_left",
-    down, KeyState, "down" | "_down",
-    up, KeyState, "up" | "_up",
-    space, KeyState, "space" | "_space",
-);
 
 impl Controller {
     pub fn check_key_down(&mut self, key: String) {
@@ -94,6 +84,7 @@ pub enum Key {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all="camelCase")]
 pub enum KeyState {
     Pressing,
     Pressed,

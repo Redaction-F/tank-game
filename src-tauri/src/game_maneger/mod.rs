@@ -1,9 +1,11 @@
 use crate::{
-    deserialize_struct, game_maneger::{collision_maneger::CollisionManeger, controller::Controller}, serialize_struct_camel, stage::StageData
+    game_maneger::{collision_maneger::CollisionManeger, controller::Controller},
+    stage::StageData,
 };
 
 pub use controller::{Key, KeyState};
 pub use collision_maneger::{HitBox, HitDirection};
+use serde::{Deserialize, Serialize};
 
 mod controller;
 mod collision_maneger;
@@ -25,22 +27,14 @@ pub fn hit_wall(game_maneger: GameManeger, hit_box: HitBox) -> HitDirection {
     game_maneger.collision_maneger.hit_wall(&hit_box)
 }
 
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all="camelCase")]
 pub struct GameManeger {
+    #[serde(alias="_controller")]
     controller: Controller,
+    #[serde(alias="_collisionManeger")]
     collision_maneger: CollisionManeger
 }
-
-impl GameManeger {
-    const FIELDS: [&'static str; 2] = ["controller", "collision_maneger"];
-}
-
-serialize_struct_camel!(GameManeger, 2, controller, collision_maneger);
-deserialize_struct!(
-    GameManeger,
-    GameManegerVisitor,
-    controller, Controller, "controller" | "_controller",
-    collision_maneger, CollisionManeger, "collisionManeger" | "_collisionManeger"
-);
 
 impl GameManeger {
     pub fn update_stage(&mut self, stage: &StageData) {

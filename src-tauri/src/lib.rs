@@ -1,8 +1,7 @@
-mod general;
-mod stage;
-mod game_maneger;
-mod move_maneger;
-mod error;
+pub mod general;
+pub mod stage;
+pub mod game_maneger;
+pub mod move_maneger;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
