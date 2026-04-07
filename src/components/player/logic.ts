@@ -13,6 +13,6 @@ type PlayerManeger = {
     moveType: "Hit",
     speed: 2.0
   }
-}
+};
 
 export { type PlayerManeger };

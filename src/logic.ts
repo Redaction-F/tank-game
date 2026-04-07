@@ -21,10 +21,11 @@ type GameManeger = {
 };
 
 type Controller = {
-  rightPressed: boolean,
-  leftPressed: boolean,
-  downPressed: boolean,
-  upPressed: boolean,
+  right: KeyState,
+  left: KeyState,
+  down: KeyState,
+  up: KeyState,
+  space: KeyState,
 };
 
 type CollisionManeger = {
@@ -32,4 +33,8 @@ type CollisionManeger = {
   stageSize: Size
 };
 
-export { type Controller, type CollisionManeger, type GameManeger, type Position, type Size }
+type KeyState = "Pressing" | "Pressed" | "Waiting";
+
+type IntervalFunction = (setGameManeger: (gameManeger: GameManeger) => void) => void;
+
+export { type Controller, type CollisionManeger, type GameManeger, type IntervalFunction, type Position, type Size }

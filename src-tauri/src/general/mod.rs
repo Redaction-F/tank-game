@@ -36,7 +36,7 @@ pub fn snake_to_camel(value: String) -> String {
 
 #[macro_export]
 macro_rules! serialize_struct_camel {
-    ($sturct_name:ident, $field_count:expr, $( $field_name:ident ), *) => {
+    ($sturct_name:ident, $field_count:expr, $( $field_name:ident ), * $(,)?) => {
         impl ::serde::Serialize for $sturct_name {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
                 where
@@ -87,7 +87,7 @@ macro_rules! field_check {
 
 #[macro_export]
 macro_rules! deserialize_struct {
-    ($struct_name:ident, $visitor_name:ident, $( $field_name:ident, $field_type:ty, $field_pat:pat ), *) => {
+    ($struct_name:ident, $visitor_name:ident, $( $field_name:ident, $field_type:ty, $field_pat:pat ), * $(,)?) => {
         impl<'de> ::serde::Deserialize<'de> for $struct_name {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
                 where

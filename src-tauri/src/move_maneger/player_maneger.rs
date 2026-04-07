@@ -1,5 +1,5 @@
 use crate::{
-    deserialize_struct, game_maneger::{GameManeger, Key}, general::{Position, Size}, move_maneger::{Gear, MoveData, MoveManeger, MoveType, TurnDirection}, serialize_struct_camel 
+    deserialize_struct, game_maneger::{GameManeger, Key, KeyState}, general::{Position, Size}, move_maneger::{Gear, MoveData, MoveManeger, MoveType, TurnDirection, bullet_maneger::BulletManeger}, serialize_struct_camel 
 };
 
 pub struct PlayerManeger {
@@ -34,25 +34,30 @@ impl PlayerManeger {
         }
     }
 
-    pub fn move_by_controller(&mut self, game_maneger: &GameManeger) -> bool {
+    pub fn move_by_controller(&mut self, game_maneger: &mut GameManeger) -> (Option<BulletManeger>, bool) {
         let mut flag: bool = false;
-        if game_maneger.controller_pressed(Key::Right) {
+        let mut bullet: Option<BulletManeger> = None;
+        if let KeyState::Pressing = game_maneger.controller_pressed(Key::Right) {
             self.turn(TurnDirection::Right);
             flag = true;
         }
-        if game_maneger.controller_pressed(Key::Left) {
+        if let KeyState::Pressing = game_maneger.controller_pressed(Key::Left) {
             self.turn(TurnDirection::Left);
             flag = true;
         }
-        if game_maneger.controller_pressed(Key::Up) {
+        if let KeyState::Pressing = game_maneger.controller_pressed(Key::Up) {
             self.move_naturally(Gear::Front, game_maneger);
             flag = true;
         }
-        if game_maneger.controller_pressed(Key::Down) {
+        if let KeyState::Pressing = game_maneger.controller_pressed(Key::Down) {
             self.move_naturally(Gear::Back, game_maneger);
             flag = true;
         }
-        flag
+        if let KeyState::Pressing = game_maneger.controller_pressed(Key::Space) {
+            bullet = Some(BulletManeger::new(self.get_move_data().position.clone(), self.get_move_data().angle));
+            flag = true;
+        }
+        (bullet, flag)
     }
 }
 

@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { GameManeger } from "../../logic";
+import { GameManeger, IntervalFunction } from "../../logic";
 import { StageData } from "./logic";
 import StageAround from "./StageAround";
 import StageMain from "./StageMain";
 import "./gird.css"
 
 // ステージ
-function Stage(props: {gameManeger: GameManeger, setGameManeger: (gameManeger: GameManeger) => void}) {
+function Stage(props: {
+  gameManeger: GameManeger, 
+  setGameManeger: (gameManeger: GameManeger) => void, 
+  addIntervalFunction: (intervalFunction: IntervalFunction) => number
+}) {
   // ステージのマップ
   const [stageData, setStageData] = useState<StageData>({
     gridMap: [],
@@ -19,7 +23,7 @@ function Stage(props: {gameManeger: GameManeger, setGameManeger: (gameManeger: G
 
   useEffect(() => {
     // ステージを読み込み
-    async function first() {
+    const first = async() => {
       const [stageRes, gameManegerRes] = await invoke<[StageData, GameManeger]>("read_stage", { fileName: "stage.json", gameManeger: props.gameManeger });
       setStageData(stageRes);
       props.setGameManeger(gameManegerRes);
@@ -30,7 +34,12 @@ function Stage(props: {gameManeger: GameManeger, setGameManeger: (gameManeger: G
   return (
     <div className="stage">
       <StageAround stageData={stageData} />
-      <StageMain gameManeger={props.gameManeger} stage={stageData} />
+      <StageMain 
+        gameManeger={props.gameManeger} 
+        setGameManeger={props.setGameManeger} 
+        addIntervalFunction={props.addIntervalFunction} 
+        stage={stageData} 
+      />
     </div>
   )
 }

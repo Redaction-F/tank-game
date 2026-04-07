@@ -1,21 +1,23 @@
-import { Position } from "../../game_maneger/collision_maneger"
+import { Position } from "../../logic"
 
-class BulletManeger {
-  private _position: Position = {
-    x: 0,
-    y: 0
-  };
-  private _angle: number = 0;
-  private _speed: number = 4;
-
-  constructor(position: Position, angle: number) {
-    this._position = position;
-    this._angle = angle;
-  }
-
-  public moveRegularly() {
-    
+type BulletManeger = {
+  moveData: {
+    // 位置
+    position: Position,
+    // 角度
+    angle: number,
+    size: {
+      width: 8,
+      height: 8,
+    },
+    moveType: {
+      Bounce: {
+        max_count: number,
+        count: number
+      }
+    },
+    speed: 1.5
   }
 }
 
-export { BulletManeger }
+export { type BulletManeger }

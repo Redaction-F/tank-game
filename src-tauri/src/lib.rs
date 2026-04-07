@@ -14,8 +14,8 @@ pub fn run() {
             game_maneger::check_key_up,
             game_maneger::hit_wall,
             move_maneger::player_maneger_init,
-            move_maneger::move_by_controller,
-            move_maneger::bullet_create
+            move_maneger::player_move_by_controller,
+            move_maneger::bullet_move_forward
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

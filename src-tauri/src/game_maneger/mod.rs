@@ -1,11 +1,8 @@
 use crate::{
-    deserialize_struct, 
-    serialize_struct_camel, 
-    game_maneger::{collision_maneger::CollisionManeger, controller::Controller}, 
-    stage::StageData,
+    deserialize_struct, game_maneger::{collision_maneger::CollisionManeger, controller::Controller}, serialize_struct_camel, stage::StageData
 };
 
-pub use controller::Key;
+pub use controller::{Key, KeyState};
 pub use collision_maneger::{HitBox, HitDirection};
 
 mod controller;
@@ -54,7 +51,7 @@ impl GameManeger {
         self.collision_maneger.hit_wall(hit_box)
     }
 
-    pub fn controller_pressed(&self, key: Key) -> bool {
+    pub fn controller_pressed(&mut self, key: Key) -> KeyState {
         self.controller.pressed(key)
     }
 }

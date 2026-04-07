@@ -7,11 +7,11 @@ use crate::{
     serialize_struct_camel, 
     game_maneger::{GameManeger, HitBox, HitDirection}, 
     general::{Position, Size}, 
-    move_maneger::{bullet::Bullet, player_maneger::PlayerManeger}, 
+    move_maneger::{bullet_maneger::BulletManeger, player_maneger::PlayerManeger}, 
 };
 
 mod player_maneger;
-mod bullet;
+mod bullet_maneger;
 
 #[tauri::command]
 pub fn player_maneger_init() -> PlayerManeger {
@@ -19,14 +19,15 @@ pub fn player_maneger_init() -> PlayerManeger {
 }
 
 #[tauri::command]
-pub fn move_by_controller(mut player_maneger: PlayerManeger, game_maneger: GameManeger) -> (PlayerManeger, bool) {
-    let res: bool = player_maneger.move_by_controller(&game_maneger);
-    (player_maneger, res)
+pub fn player_move_by_controller(mut player_maneger: PlayerManeger, mut game_maneger: GameManeger) -> (PlayerManeger, GameManeger, Option<BulletManeger>, bool) {
+    let res: (Option<BulletManeger>, bool) = player_maneger.move_by_controller(&mut game_maneger);
+    (player_maneger, game_maneger, res.0, res.1)
 }
 
 #[tauri::command]
-pub fn bullet_create(position: Position, angle: usize) -> Bullet {
-    Bullet::new(position, angle)
+pub fn bullet_move_forward(mut bullet_maneger: BulletManeger, game_maneger: GameManeger) -> (BulletManeger, bool) {
+    let res: bool = bullet_maneger.move_forward(&game_maneger);
+    (bullet_maneger, res)
 }
 
 struct MoveData {
@@ -56,6 +57,14 @@ impl MoveData {
 
     fn turn(&mut self, a: usize) {
         self.angle += a;
+        self.angle %= 360;
+    }
+
+    fn turn_map<F>(&mut self, f: F) 
+    where 
+        F: Fn(usize) -> usize
+    {
+        self.angle = f(self.angle);
         self.angle %= 360;
     }
 
@@ -90,19 +99,18 @@ trait MoveManeger {
                 if b.count >= b.max_count {
                     return true;
                 } else {
-                    move_data.position = pre_position;
-                    move_data.angle = 360 - move_data.angle;
                     b.count += 1;
+                    move_data.position = pre_position;
+                    move_data.turn_map(|v| 360 - v);
                 }
             },
             (HitDirection::Down | HitDirection::Up, MoveType::Bounce(b)) => {
                 if b.count >= b.max_count {
                     return true;
                 } else {
-                    move_data.position = pre_position;
-                    move_data.angle = 540 - move_data.angle;
-                    move_data.angle %= 360;
                     b.count += 1;
+                    move_data.position = pre_position;
+                    move_data.turn_map(|v| 540 - v);
                 }
             }
         }

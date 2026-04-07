@@ -1,17 +1,17 @@
-use crate::{deserialize_struct, general::{Position, Size}, move_maneger::{BounceData, MoveData, MoveManeger, MoveType}, serialize_struct_camel};
+use crate::{deserialize_struct, game_maneger::GameManeger, general::{Position, Size}, move_maneger::{BounceData, Gear, MoveData, MoveManeger, MoveType}, serialize_struct_camel};
 
-pub struct Bullet {
+pub struct BulletManeger {
     move_data: MoveData
 }
 
-serialize_struct_camel!(Bullet, 1, move_data);
+serialize_struct_camel!(BulletManeger, 1, move_data);
 deserialize_struct!(
-    Bullet,
+    BulletManeger,
     BulletVisitor,
     move_data, MoveData, "moveData" | "_moveData"
 );
 
-impl Bullet {
+impl BulletManeger {
     const FIELDS: [&'static str; 1] = ["move_data"];
 
     pub fn new(position: Position, angle: usize) -> Self {
@@ -28,9 +28,13 @@ impl Bullet {
             } 
         } 
     }
+
+    pub fn move_forward(&mut self, game_maneger: &GameManeger) -> bool {
+        self.move_naturally(Gear::Front, game_maneger)
+    }
 }
 
-impl MoveManeger for Bullet {
+impl MoveManeger for BulletManeger {
     fn get_move_data(&self) -> &MoveData {
         &self.move_data
     }
