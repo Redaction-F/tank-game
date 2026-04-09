@@ -8,11 +8,11 @@ function App() {
   // ゲーム管理
   const gameManeger = useRef<GameManeger>({
     controller: {
-      right: "Waiting",
-      left: "Waiting",
-      down: "Waiting",
-      up: "Waiting",
-      space: "Waiting"
+      right: "waiting",
+      left: "waiting",
+      down: "waiting",
+      up: "waiting",
+      space: "waiting"
     },
     collisionManeger: {
       walls: [],

@@ -35,7 +35,7 @@ function Player(props: {
         width: 32,
         height: 32
       },
-      moveType: "Hit",
+      moveType: "hit",
       speed: 2.0
     }
   });

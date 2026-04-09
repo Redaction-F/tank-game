@@ -1,9 +1,10 @@
 use std::fs;
 
+use log::error;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    game_maneger::GameManeger,
+    game_maneger::GameManeger, general::{Error, ErrorVariant},
 };
 
 /// [tauri command]
@@ -11,12 +12,30 @@ use crate::{
 /// * `file_name` - A name of file which have stage data
 /// * `game_maneger` - The game maneger
 #[tauri::command]
-pub fn read_stage(file_name: String, mut game_maneger: GameManeger) -> Result<(StageData, GameManeger), String> {
+pub fn read_stage(file_name: String, mut game_maneger: GameManeger) -> Result<(StageData, GameManeger), Error> {
     let path_name: String = format!("./resourse/stage/{}", file_name);
     let f: String = fs::read_to_string(path_name)
-        .map_err(|_| String::from("Failed to read stage data."))?;
+        .map_err(|e| {
+            let e: Error = Error::from_error(
+                ErrorVariant::IOError,
+                "Failed to read stage data.",
+                "ステージの読み込みに失敗しました。",
+                e
+            );
+            error!("{}", e);
+            e
+        })?;
     let stage: StageData = serde_json::from_str(&f)
-        .map_err(|_| String::from("Failed to parse stage data."))?;
+        .map_err(|e| {
+            let e: Error = Error::from_error(
+                ErrorVariant::FileError,
+                "Failed to parse stage data.",
+                "ステージの読み込みに失敗しました。",
+                e
+            );
+            error!("{}", e);
+            e
+        })?;
     game_maneger.update_stage(&stage);
     Ok((stage, game_maneger))
 }
@@ -24,7 +43,7 @@ pub fn read_stage(file_name: String, mut game_maneger: GameManeger) -> Result<(S
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StageData {
-    #[serde(alias = "_gridMap")]
+    #[serde(alias = "grid_map", alias = "_gridMap")]
     grid_map: GridMap,
     #[serde(alias = "_start")]
     start: GridPosition,
@@ -52,8 +71,8 @@ pub enum Grid {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct GridPosition {
-    #[serde(alias = "_gridX")]
+    #[serde(alias = "grid_x", alias = "_gridX")]
     grid_x: f64,
-    #[serde(alias = "_gridY")]
+    #[serde(alias = "grid_y", alias = "_gridY")]
     grid_y: f64
 }

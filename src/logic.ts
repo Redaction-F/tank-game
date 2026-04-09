@@ -33,7 +33,7 @@ type CollisionManeger = {
   stageSize: Size
 };
 
-type KeyState = "Pressing" | "Pressed" | "Waiting";
+type KeyState = "pressing" | "pressed" | "waiting";
 
 type IntervalFunction = (setGameManeger: (gameManeger: GameManeger) => void) => void;
 

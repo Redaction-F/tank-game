@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { GameManeger, IntervalFunction } from "../../logic";
 import { StageData } from "./logic";
@@ -20,6 +20,7 @@ function Stage(props: {
       gridY: 0
     }
   });
+  const firstRendering = useRef<boolean>(false);
 
   useEffect(() => {
     // ステージを読み込み
@@ -28,6 +29,10 @@ function Stage(props: {
       setStageData(stageRes);
       props.setGameManeger(gameManegerRes);
     }
+    if (firstRendering.current) {
+      return;
+    }
+    firstRendering.current = true;
     first();
   }, []);
 
