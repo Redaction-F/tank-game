@@ -43,6 +43,7 @@ pub fn read_stage(file_name: String, mut game_maneger: GameManeger) -> Result<(S
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StageData {
+    // snake_case alias for json
     #[serde(alias = "grid_map", alias = "_gridMap")]
     grid_map: GridMap,
     #[serde(alias = "_start")]
@@ -71,8 +72,10 @@ pub enum Grid {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct GridPosition {
+    // snake_case alias for json
     #[serde(alias = "grid_x", alias = "_gridX")]
     grid_x: f64,
+    // snake_case alias for json
     #[serde(alias = "grid_y", alias = "_gridY")]
     grid_y: f64
 }
