@@ -1,4 +1,5 @@
 use core::f64;
+use std::mem::swap;
 
 use serde::{Deserialize, Serialize};
 
@@ -9,6 +10,7 @@ use crate::{
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
+/// Collision system. The manege collision of objects.
 pub struct CollisionManeger {
     #[serde(alias="_walls")]
     walls: Vec<HitBox>,
@@ -17,9 +19,11 @@ pub struct CollisionManeger {
 }
 
 impl CollisionManeger {
+    /// Update a stage data. This function must be run when updating a stage.
+    /// * `stage` - a stage data
     pub fn update_stage(&mut self, stage: &StageData) {
-        self.walls = Vec::new();
-        stage
+        // update `walls`
+        let mut new_walls: Vec<HitBox> = stage
             .get_grid_map()
             .iter()
             .enumerate()
@@ -28,24 +32,48 @@ impl CollisionManeger {
                     .iter()
                     .enumerate()
                     .filter_map(move |(j, v)| match v {
-                        Grid::Wall | Grid::CrackedWall => Some((j, i)),
+                        // if this is wall, get a position based grid
+                        Grid::Wall | Grid::CrackedWall => Some(HitBox::wall((j, i))),
                         _ => None
                     }))
             .flatten()
-            .for_each(|grid_position| self.walls.push(HitBox::wall(grid_position)));
+            .collect::<Vec<HitBox>>();
+        swap(&mut self.walls, &mut new_walls);
+        // update `stage_size`
         self.stage_size = Size::new( 
             HitBox::WALL_WIDTH * stage.get_grid_map().get(0).map(|v| v.len()).unwrap_or_default(),
             HitBox::WALL_HEIGHT * stage.get_grid_map().len(), 
         );
     }
 
+    /// Check which direction `a` hits `b` from.
+    /// * `a` - a main target
+    /// * `b` - a sub target
     fn hit(a: &HitBox, b: &HitBox) -> HitDirection {
-        let stack_right: f64 = min_f64(a.position.get_x() + a.size.get_width() as f64, b.position.get_x() + b.size.get_width() as f64);
-        let stack_left: f64 = max_f64(a.position.get_x(), b.position.get_x());
-        let stack_down: f64 = min_f64(a.position.get_y() + a.size.get_height() as f64, b.position.get_y() + b.size.get_height() as f64);
-        let stack_up: f64 = max_f64(a.position.get_y(), b.position.get_y());
+        // stack of two hitboxes
+        let stack_right: f64 = map_f64(
+            a.position.get_x() + a.size.get_width() as f64, 
+            b.position.get_x() + b.size.get_width() as f64,
+            |x, y| if x > y { y } else { x },
+        );
+        let stack_left: f64 = map_f64(
+            a.position.get_x(), 
+            b.position.get_x(),
+            |x, y| if x > y { x } else { y },
+        );
+        let stack_down: f64 = map_f64(
+            a.position.get_y() + a.size.get_height() as f64, 
+            b.position.get_y() + b.size.get_height() as f64,
+            |x, y| if x > y { y } else { x },
+        );
+        let stack_up: f64 = map_f64(
+            a.position.get_y(), 
+            b.position.get_y(),
+            |x, y| if x > y { x } else { y },
+        );
         let stack_width: f64 = stack_right - stack_left;
         let stack_height: f64 = stack_down - stack_up;
+        // hit or not
         if (stack_height > 0.0) && (stack_width > 0.0) {
             if stack_height >= stack_width {
                 let a_center_x: f64 = a.position.get_x() + (a.size.get_width() as f64) / 2.0;
@@ -69,7 +97,9 @@ impl CollisionManeger {
         }
     }
 
+    /// Check which direction `hit_box` hits walls from.
     pub fn hit_wall(&self, hit_box: &HitBox) -> HitDirection {
+        // wall in stage
         let hit_stage_wall = self.walls
             .iter()
             .find_map(|v| match CollisionManeger::hit(hit_box, v) {
@@ -81,6 +111,7 @@ impl CollisionManeger {
         if let Some(v) = hit_stage_wall {
             return v;
         }
+        // around wall
         if hit_box.position.get_x() < 0.0 {
             return HitDirection::Right
         } else if hit_box.position.get_x() + hit_box.size.get_width() as f64 > self.stage_size.get_width() as f64 {
@@ -94,29 +125,21 @@ impl CollisionManeger {
     }
 }
 
-fn max_f64(a: f64, b: f64) -> f64 {
+fn map_f64<F>(a: f64, b: f64, f: F) -> f64 
+where 
+    F: Fn(f64, f64) -> f64
+{
     if a.is_nan() || b.is_nan() {
         f64::NAN
-    } else if a > b {
-        a
     } else {
-        b
-    }
-}
-
-fn min_f64(a: f64, b: f64) -> f64 {
-    if a.is_nan() || b.is_nan() {
-        f64::NAN
-    } else if a > b {
-        b
-    } else {
-        a
+        f(a, b)
     }
 }
 
 #[derive(Debug, Clone)]
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
+/// Hit box position and size.
 pub struct HitBox {
     #[serde(alias="_position")]
     position: Position,
@@ -151,6 +174,7 @@ impl From<(Position, Size)> for HitBox {
 #[derive(Debug)]
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
+/// Which direction a object hit another object from
 pub enum HitDirection {
     Right,
     Left,

@@ -4,13 +4,15 @@ use log::error;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    game_maneger::GameManeger, general::{Error, ErrorVariant},
+    game_maneger::GameManeger, 
+    general::{Error, ErrorVariant},
 };
 
-/// [tauri command]
+/// [[tauri command]]
+/// 
 /// Read json file and get `StageData`.
-/// * `file_name` - A name of file which have stage data
-/// * `game_maneger` - The game maneger
+/// * `file_name` - a name of file which have stage data
+/// * `game_maneger` - the game maneger
 #[tauri::command]
 pub fn read_stage(file_name: String, mut game_maneger: GameManeger) -> Result<(StageData, GameManeger), Error> {
     let path_name: String = format!("./resourse/stage/{}", file_name);
@@ -40,6 +42,7 @@ pub fn read_stage(file_name: String, mut game_maneger: GameManeger) -> Result<(S
     Ok((stage, game_maneger))
 }
 
+/// A data of tank-game stage.
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StageData {
@@ -60,17 +63,22 @@ pub type GridMap = Vec<Vec<Grid>>;
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+/// A grid of stage.
 pub enum Grid {
     #[serde(alias = "F", alias = "_floor")]
+    /// The tank can go through this gird.
     Floor,
     #[serde(alias = "W", alias = "_wall")]
+    /// The tank can't go through this gird.
     Wall,
     #[serde(alias = "C", alias = "_crackedWall")]
+    /// The tank can't go through this gird but can break.
     CrackedWall
 }
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+/// A stage position based grid.
 struct GridPosition {
     // snake_case alias for json
     #[serde(alias = "grid_x", alias = "_gridX")]

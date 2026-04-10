@@ -42,14 +42,14 @@ function App() {
     firstRendering.current = true;
     // キー入力に対するイベントを設定
     document.addEventListener("keydown", async (e: KeyboardEvent) => {
-      const controllerRes = await invoke<Controller>("check_key_down", { controller: gameManeger.current.controller, key: e.key });
+      const controllerRes = await invoke<Controller>("check_keydown", { controller: gameManeger.current.controller, key: e.key });
       setGameManeger({
         controller: controllerRes,
         collisionManeger: gameManeger.current.collisionManeger
       });
     }, false);
     document.addEventListener("keyup", async (e: KeyboardEvent) => {
-      const controllerRes = await invoke<Controller>("check_key_up", { controller: gameManeger.current.controller, key: e.key });
+      const controllerRes = await invoke<Controller>("check_keyup", { controller: gameManeger.current.controller, key: e.key });
       setGameManeger({
         controller: controllerRes,
         collisionManeger: gameManeger.current.collisionManeger

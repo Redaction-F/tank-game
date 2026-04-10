@@ -23,21 +23,28 @@ impl Error {
     }
 
     /// Make `Error` from message.
-    pub fn from_msg(variant: ErrorVariant, for_developer: &str, for_user: &str) -> Self {
+    /// * `variant` - a kind of error
+    /// * `for_developers` - an error messsage for developers
+    /// * `for_users` - an error messsage for users
+    pub fn from_msg(variant: ErrorVariant, for_developers: &str, for_users: &str) -> Self {
         Self::from_variant(variant, ErrorMsg { 
-            for_developer: for_developer.to_string(), 
-            for_user: for_user.to_string()
+            for_developers: for_developers.to_string(), 
+            for_users: for_users.to_string()
         })
     }
 
     /// Make `Error` from message and original error.
-    pub fn from_error<E>(variant: ErrorVariant, for_developer: &str, for_user: &str, error: E) -> Self 
+    /// * `variant` - a kind of error
+    /// * `for_developers` - an error messsage for developers
+    /// * `for_users` - an error messsage for users
+    /// * `error` - an original error
+    pub fn from_error<E>(variant: ErrorVariant, for_developers: &str, for_users: &str, error: E) -> Self 
     where 
         E: error::Error
     {
         Self::from_variant(variant, ErrorMsg { 
-            for_developer: format!("{}/original error: {}", for_developer, error), 
-            for_user: for_user.to_string()
+            for_developers: format!("{}/original error: {}", for_developers, error), 
+            for_users: for_users.to_string()
         })
     }
 }
@@ -46,8 +53,8 @@ impl Error {
 impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", match self {
-            Self::IOError(v) => format!("IOError({}/{})", v.for_developer, v.for_user),
-            Self::FileError(v) => format!("FileError({}/{})", v.for_developer, v.for_user),
+            Self::IOError(v) => format!("IOError({}/{})", v.for_developers, v.for_users),
+            Self::FileError(v) => format!("FileError({}/{})", v.for_developers, v.for_users),
         })
     }
 }
@@ -62,8 +69,8 @@ pub enum ErrorVariant {
 
 #[derive(Debug)]
 pub struct ErrorMsg {
-    for_developer: String,
-    for_user: String
+    for_developers: String,
+    for_users: String
 }
 
 // string -> ErrorMsg
@@ -71,7 +78,7 @@ impl Serialize for ErrorMsg {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
             S: serde::Serializer {
-        serializer.serialize_str(&self.for_user)
+        serializer.serialize_str(&self.for_users)
     }
 }
 
@@ -98,8 +105,8 @@ impl<'de> Visitor<'de> for ErrorMsgVisitor {
         where
             E: serde::de::Error, {
         Ok(Self::Value {
-            for_developer: String::default(),
-            for_user: v
+            for_developers: String::default(),
+            for_users: v
         })
     }
 }

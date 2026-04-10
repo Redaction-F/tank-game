@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use crate::{
     game_maneger::{collision_maneger::CollisionManeger, controller::Controller},
     stage::StageData,
@@ -5,30 +7,35 @@ use crate::{
 
 pub use controller::{Key, KeyState};
 pub use collision_maneger::{HitBox, HitDirection};
-use serde::{Deserialize, Serialize};
 
 mod controller;
 mod collision_maneger;
 
+/// [[tauri command]]
+/// 
+/// Check keydown and get datas of necessary key. This function must be run when a key is pressed.
+/// * `controller` - the controller
+/// * `key` - a pressed key
 #[tauri::command]
-pub fn check_key_down(mut controller: Controller, key: String) -> Controller {
-    controller.check_key_down(key);
+pub fn check_keydown(mut controller: Controller, key: String) -> Controller {
+    controller.check_keydown(key);
     controller
 }
 
+/// [[tauri command]]
+/// 
+/// Check keyup and get datas of necessary key. This function must be run when a key is released.
+/// * `controller` - the controller
+/// * `key` - a released key
 #[tauri::command]
-pub fn check_key_up(mut controller: Controller, key: String) -> Controller {
-    controller.check_key_up(key);
+pub fn check_keyup(mut controller: Controller, key: String) -> Controller {
+    controller.check_keyup(key);
     controller
-}
-
-#[tauri::command]
-pub fn hit_wall(game_maneger: GameManeger, hit_box: HitBox) -> HitDirection {
-    game_maneger.collision_maneger.hit_wall(&hit_box)
 }
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
+/// Tank-game logic. This has controller system and collision system.
 pub struct GameManeger {
     #[serde(alias="_controller")]
     controller: Controller,

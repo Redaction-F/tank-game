@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
+/// Controller system. This manege user input.
 pub struct Controller {
     #[serde(alias="_right")]
     right: KeyState,
@@ -16,7 +17,9 @@ pub struct Controller {
 }
 
 impl Controller {
-    pub fn check_key_down(&mut self, key: String) {
+    /// Check keydown and get datas of necessary key. This function must be run when a key is pressed.
+    /// * `key` - a pressed key
+    pub fn check_keydown(&mut self, key: String) {
         match key.as_str() {
             "Right" | "ArrowRight" => {
                 self.right = KeyState::Pressing;
@@ -37,7 +40,9 @@ impl Controller {
         }
     }
 
-    pub fn check_key_up(&mut self, key: String) {
+    /// Check keyup and get datas of necessary key. This function must be run when a key is released.
+    /// * `key` - a released key
+    pub fn check_keyup(&mut self, key: String) {
         match key.as_str() {
             "Right" | "ArrowRight" => {
                 self.right = KeyState::Waiting;
@@ -58,12 +63,14 @@ impl Controller {
         }
     }
 
+    /// Get key state.
     pub fn pressed(&mut self, key: Key) -> KeyState {
         match key {
             Key::Right => self.right.clone(),
             Key::Left => self.left.clone(),
             Key::Down => self.down.clone(),
             Key::Up => self.up.clone(),
+            // The information of pressing space key is returned once for a pressing.
             Key::Space => match &self.space {
                 KeyState::Pressing => {
                     self.space = KeyState::Pressed;
@@ -75,6 +82,7 @@ impl Controller {
     }
 }
 
+/// The kind of watched key.
 pub enum Key {
     Right,
     Left,
@@ -85,8 +93,12 @@ pub enum Key {
 
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
+/// The state of key.
 pub enum KeyState {
+    /// Pressing now
     Pressing,
+    /// Already pressed
     Pressed,
+    /// Not pressing
     Waiting
 }
