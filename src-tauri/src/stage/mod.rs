@@ -48,11 +48,13 @@ pub fn load_stage(file_name: String, mut game_maneger: GameManeger) -> Result<(S
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StageData {
+    #[serde(alias = "stage_id", alias = "_stageId")]
+    stage_id: usize,
     // snake_case alias for json
     #[serde(alias = "grid_map", alias = "_gridMap")]
     grid_map: GridMap,
-    #[serde(alias = "_start")]
-    start: GridPosition,
+    #[serde(alias = "start_grid", alias = "_startGrid")]
+    start_grid: GridPosition,
 }
 
 impl StageData {

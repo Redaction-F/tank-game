@@ -7,7 +7,7 @@ function StageMain(props: {
   gameManeger: GameManeger, 
   setGameManeger: (gameManeger: GameManeger) => void, 
   addIntervalFunction: (ontervalFunction: IntervalFunction) => number, 
-  stage: StageData 
+  stage: StageData,
 }) {
   return (
     <div className="grid-main">
@@ -30,7 +30,11 @@ function StageMain(props: {
         )
       }
       {/* プレイヤー */}
-      <Player gameManeger={props.gameManeger} addIntervalFunction={props.addIntervalFunction} />
+      <Player 
+        startGrid={props.stage.startGrid}
+        gameManeger={props.gameManeger} 
+        addIntervalFunction={props.addIntervalFunction} 
+      />
     </div>
   )
 }

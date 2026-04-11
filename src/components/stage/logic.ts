@@ -1,11 +1,13 @@
 type StageData = {
+  stageId: number,
   gridMap: GridMap,
-  start: GridPosition
+  startGrid: GridPosition
 }
 const initStageData = (): StageData => {
   return {
+    stageId: 0,
     gridMap: [],
-    start: {
+    startGrid: {
       gridX: 0,
       gridY: 0
     },
@@ -29,4 +31,4 @@ type GridPosition = {
   gridY: number,
 }
 
-export { gridMapCol, gridMapRow, initStageData, type StageData }
+export { gridMapCol, gridMapRow, type GridPosition, initStageData, type StageData }

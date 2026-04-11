@@ -39,12 +39,16 @@ function Stage(props: {
 
   return (
     <div className="stage">
-      <StageAround stageData={stageData} />
+      <StageAround 
+        stageData={stageData} 
+        key={stageData.stageId + 2000}
+      />
       <StageMain 
         gameManeger={props.gameManeger} 
         setGameManeger={props.setGameManeger} 
         addIntervalFunction={props.addIntervalFunction} 
         stage={stageData} 
+        key={stageData.stageId}
       />
     </div>
   )

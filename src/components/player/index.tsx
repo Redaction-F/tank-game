@@ -5,9 +5,11 @@ import { GameManeger, IntervalFunction } from "../../logic";
 import { invoke } from "@tauri-apps/api/core";
 import { BulletManeger } from "../bullet/logic";
 import Bullet from "../bullet";
+import { GridPosition } from "../stage/logic";
 
 // プレイヤー
 function Player(props: {
+  startGrid: GridPosition,
   gameManeger: GameManeger, 
   addIntervalFunction: (intervalFunction: IntervalFunction) => number
 }) {
@@ -51,6 +53,15 @@ function Player(props: {
 
   useEffect(() => {
     const first = async () => {
+      const startPosition = {
+        x: props.startGrid.gridX * 32 - playerManeger.current.moveData.size.width / 2,
+        y: props.startGrid.gridY * 32 - playerManeger.current.moveData.size.height / 2,
+      };
+      playerManeger.current.moveData.position = startPosition;
+      setPositionAndAngle({
+        position: startPosition,
+        angle: 0
+      });
       // コントローラを定期的に読んで移動させる
       props.addIntervalFunction(async (setGameManeger) => {
         // コントローラを読む
@@ -97,6 +108,10 @@ function Player(props: {
     first();
   }, []);
 
+  useEffect(() => {
+
+  }, [])
+
   return (
     <>
       {
@@ -123,22 +138,7 @@ function Player(props: {
           left: positionAndAngle.position.x, 
           transform: `rotate(${positionAndAngle.angle}deg)` 
         }} 
-        src="./src/assets/img/tank.gif" 
-      />
-      <div
-        // 位置と角度を指定
-        style={{ 
-          top: positionAndAngle.position.y
-            + playerManeger.current.moveData.size.height / 2
-            + playerManeger.current.moveData.size.width / 2 * Math.sin(positionAndAngle.angle * Math.PI / 180), 
-          left: positionAndAngle.position.x
-            + playerManeger.current.moveData.size.width / 2
-            + playerManeger.current.moveData.size.width / 2 * Math.cos(positionAndAngle.angle * Math.PI / 180), 
-          width: "1px",
-          height: "1px",
-          background: "red",
-          position: "absolute"
-        }} 
+        src="./src/assets/img/tank.gif"
       />
     </>
   )
