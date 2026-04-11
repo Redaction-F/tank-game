@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { PlayerManeger } from "./logic"
+import { initObjectRenderingData, initPlayerManeger, ObjectRenderingData, PlayerManeger } from "./logic"
 import "./player.css"
 import { GameManeger, IntervalFunction } from "../../logic";
 import { invoke } from "@tauri-apps/api/core";
@@ -12,66 +12,55 @@ function Player(props: {
   addIntervalFunction: (intervalFunction: IntervalFunction) => number
 }) {
   // プレイヤーの位置と角度
-  const [positionAndAngle, setPositionAndAngle] = useState<{
-    x: number,
-    y: number,
-    angle: number
-  }>({
-    x: 0,
-    y: 0,
-    angle: 360
-  });
-  // コントローラーを読むsetIntervalの返り値
-  const firstRendering = useRef<boolean>(false);
-  // プレイヤー管理
-  const playerManeger = useRef<PlayerManeger>({
-    moveData: {
-      position: {
-        x: 0, 
-        y: 0
-      },
-      angle: 0,
-      size: {
-        width: 32,
-        height: 32
-      },
-      moveType: "hit",
-      speed: 2.0
-    }
-  });
+  const [positionAndAngle, setPositionAndAngle] = useState<ObjectRenderingData>(initObjectRenderingData());
+  // プレイヤー管理オブジェクト
+  const playerManeger = useRef<PlayerManeger>(initPlayerManeger());
+  // 砲弾管理オブジェクト群
   const [bulletManegers, setBulletManegers] = useState<({
     id: number,
     maneger: BulletManeger,
   } | null)[]>([null]);
-  const bulletId = useRef<number>(0);
-  const getNewBulletId = () => {
-    bulletId.current += 1;
-    return bulletId.current - 1;
-  }
+  // 次の砲弾id
+  const nextBulletId = useRef<number>(0);
+  // 次の砲弾id取得、更新
+  const getNewBulletId = (): number => {
+    nextBulletId.current += 1;
+    return nextBulletId.current - 1;
+  };
+  // 初回のみ実行するためのフラグ
+  const firstRendering = useRef<boolean>(false);
 
   useEffect(() => {
-    const init = async () => {
+    const first = async () => {
       // コントローラを定期的に読んで移動させる
       props.addIntervalFunction(async (setGameManeger) => {
+        // コントローラを読む
         const [rendering, bulletManegerRes, playerManegerawaitRes, gameManegerRes] = 
           await invoke<[boolean, BulletManeger | null, PlayerManeger, GameManeger]>("player_move_by_controller", {
             playerManeger: playerManeger.current, 
             gameManeger: props.gameManeger
           });
+        // 動いていないなら残りを飛ばす
         if (!rendering) {
           return;
         }
+        // プレイヤー管理オブジェクトを更新
         playerManeger.current = playerManegerawaitRes;
+        // 砲弾が発射されていたら砲弾を作成
         if (bulletManegerRes !== null) {
           setBulletManegers([{
             id: getNewBulletId(),
             maneger: bulletManegerRes
           }]);
+          // スペースキーを押したときだけ更新される
           setGameManeger(gameManegerRes);
         }
+        // プレイヤーの位置を更新
         setPositionAndAngle({
-          x: Math.floor(playerManeger.current.moveData.position.x),
-          y: Math.floor(playerManeger.current.moveData.position.y),
+          position: {
+            x: Math.floor(playerManeger.current.moveData.position.x),
+            y: Math.floor(playerManeger.current.moveData.position.y),
+          },
           angle: Math.floor(playerManeger.current.moveData.angle),
         });
       });
@@ -80,12 +69,8 @@ function Player(props: {
       return;
     }
     firstRendering.current = true;
-    init();
+    first();
   }, []);
-
-  useEffect(() => {
-    console.log(bulletManegers[0]);
-  }, bulletManegers)
 
   return (
     <>
@@ -93,8 +78,8 @@ function Player(props: {
         className="player" 
         // 位置と角度を指定
         style={{ 
-          top: positionAndAngle.y, 
-          left: positionAndAngle.x, 
+          top: positionAndAngle.position.y, 
+          left: positionAndAngle.position.x, 
           transform: `rotate(${positionAndAngle.angle}deg)` 
         }} 
         src="./src/assets/img/tank.gif" 

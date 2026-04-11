@@ -1,32 +1,21 @@
 import { useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Controller, GameManeger, IntervalFunction } from "./logic";
+import { Controller, GameManeger, initGameManeger, IntervalFunction } from "./logic";
 import Stage from "./components/stage";
 import "./App.css";
 
 function App() {
-  // ゲーム管理
-  const gameManeger = useRef<GameManeger>({
-    controller: {
-      right: "waiting",
-      left: "waiting",
-      down: "waiting",
-      up: "waiting",
-      space: "waiting"
-    },
-    collisionManeger: {
-      walls: [],
-      stageSize: {
-        width: 0,
-        height: 0
-      }
-    }
-  });
-  const setGameManeger = (value: GameManeger) => {
+  // ゲーム管理オブジェクト
+  const gameManeger = useRef<GameManeger>(initGameManeger());
+  // ゲーム管理オブジェクトの更新
+  // ゲーム管理オブジェクトそのものは維持する
+  const setGameManeger = (value: GameManeger): void => {
     gameManeger.current.controller = value.controller;
     gameManeger.current.collisionManeger = value.collisionManeger;
   };
-  const addIntervalFunction = (intervalFunction: IntervalFunction) => {
+  // 定期実行する関数を設定
+  // 設定する関数はゲーム管理オブジェクト更新関数を引数に取れる
+  const addIntervalFunction = (intervalFunction: IntervalFunction): number => {
     return setInterval(() => {
       intervalFunction(setGameManeger);
     }, 20);

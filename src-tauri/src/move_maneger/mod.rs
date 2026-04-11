@@ -28,7 +28,7 @@ pub fn player_move_by_controller(mut player_maneger: PlayerManeger, mut game_man
 /// * `bullet_maneger` - the bullet maneger
 /// * `game_maneger` - the game maneger
 /// ## Return
-/// Whether bullet moved or not, updated `BulletManeger`.
+/// Whether bullet disappeared or not, updated `BulletManeger`.
 #[tauri::command]
 pub fn bullet_move_forward(mut bullet_maneger: BulletManeger, game_maneger: GameManeger) -> (bool, BulletManeger) {
     let res: bool = bullet_maneger.move_forward(&game_maneger);

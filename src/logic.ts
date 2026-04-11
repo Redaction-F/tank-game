@@ -19,6 +19,25 @@ type GameManeger = {
   controller: Controller,
   collisionManeger: CollisionManeger
 };
+// ゲーム管理オプジェクトの初期化
+const initGameManeger = (): GameManeger => {
+  return {
+    controller: {
+      right: "waiting",
+      left: "waiting",
+      down: "waiting",
+      up: "waiting",
+      space: "waiting",
+    },
+    collisionManeger: {
+      walls: [],
+      stageSize: {
+        width: 0,
+        height: 0
+      },
+    },
+  }
+}
 
 type Controller = {
   right: KeyState,
@@ -37,4 +56,4 @@ type KeyState = "pressing" | "pressed" | "waiting";
 
 type IntervalFunction = (setGameManeger: (gameManeger: GameManeger) => void) => void;
 
-export { type Controller, type CollisionManeger, type GameManeger, type IntervalFunction, type Position, type Size }
+export { type Controller, type CollisionManeger, type GameManeger, initGameManeger, type IntervalFunction, type Position, type Size }

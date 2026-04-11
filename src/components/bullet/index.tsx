@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { BulletManeger } from "./logic";
+import { BulletManeger, initBulletManeger } from "./logic";
 import { invoke } from "@tauri-apps/api/core";
 import { GameManeger, IntervalFunction } from "../../logic";
 import "./bullet.css"
+import { initObjectRenderingData, ObjectRenderingData } from "../player/logic";
 
 function Bullet(props: { 
   gameManeger: GameManeger, 
@@ -11,65 +12,59 @@ function Bullet(props: {
   disappear: () => void,
   id: number
 }) {
-  const [positionAndAngle, setPositionAndAngle] = useState<{
-    x: number,
-    y: number,
-    angle: number
-  }>({
-    x: props.initBulletManeger.moveData.position.x,
-    y: props.initBulletManeger.moveData.position.y,
-    angle: props.initBulletManeger.moveData.angle,
-  });
-  const bulletManeger = useRef<BulletManeger>({
-      moveData: {
-      // 位置
-      position: {
-        x: 0,
-        y: 0
-      },
-      // 角度
-      angle: 0,
-      size: {
-        width: 8,
-        height: 8,
-      },
-      moveType: {
-        Bounce: {
-          max_count: 0,
-          count: 0
-        }
-      },
-      speed: 1.5
-    }
-  });
+  // 砲弾の位置と角度
+  const [positionAndAngle, setPositionAndAngle] = useState<ObjectRenderingData>(initObjectRenderingData());
+  // 砲弾管理オブジェクト
+  const bulletManeger = useRef<BulletManeger>(initBulletManeger());
+  // 定期実行関数の削除用
   const intervalId = useRef<number | null>(null);
+  // 初回レンダリング用
   const firstRendering = useRef<boolean>(false);
 
   useEffect(() => {
+    const first = () => {
+      // 砲弾管理オブジェクトを初期化
+      bulletManeger.current = props.initBulletManeger;
+      // 砲弾の位置を更新
+      setPositionAndAngle({
+        position: {
+          x: Math.floor(bulletManeger.current.moveData.position.x),
+          y: Math.floor(bulletManeger.current.moveData.position.y),
+        },
+        angle: Math.floor(bulletManeger.current.moveData.angle),
+      });
+      // 砲弾の更新を定期実行
+      intervalId.current = props.addIntervalFunction(async () => {
+        // 砲弾の更新
+        const [disappear, bulletManegerRes] = await invoke<[boolean, BulletManeger]>("bullet_move_forward", { 
+          bulletManeger: bulletManeger.current, 
+          gameManeger: props.gameManeger 
+        });
+        // 砲弾管理オブジェクトを更新
+        bulletManeger.current = bulletManegerRes;
+        // 砲弾が消滅していたら
+        if (disappear) {
+          props.disappear();
+          // 定期実行を削除
+          if (intervalId.current !== null) {
+            clearInterval(intervalId.current);
+          }
+        }
+        // 砲弾の位置を更新
+        setPositionAndAngle({
+          position: {
+            x: Math.floor(bulletManeger.current.moveData.position.x),
+            y: Math.floor(bulletManeger.current.moveData.position.y),
+          },
+          angle: Math.floor(bulletManeger.current.moveData.angle),
+        });
+      });
+    };
     if (firstRendering.current) {
       return;
-    }
+    };
     firstRendering.current = true;
-    console.log(`bullet id\n\tid: ${props.id}`);
-    bulletManeger.current = props.initBulletManeger;
-    intervalId.current = props.addIntervalFunction(async () => {
-      const [disappear, bulletManegerRes] = await invoke<[boolean, BulletManeger]>("bullet_move_forward", { 
-        bulletManeger: bulletManeger.current, 
-        gameManeger: props.gameManeger 
-      });
-      bulletManeger.current = bulletManegerRes;
-      if (disappear) {
-        props.disappear();
-        if (intervalId.current !== null) {
-          clearInterval(intervalId.current);
-        }
-      }
-      setPositionAndAngle({
-        x: Math.floor(bulletManeger.current.moveData.position.x),
-        y: Math.floor(bulletManeger.current.moveData.position.y),
-        angle: Math.floor(bulletManeger.current.moveData.angle)
-      })
-    });
+    first();
   }, []);
 
   return (
@@ -77,8 +72,8 @@ function Bullet(props: {
       className="bullet" 
       // 位置と角度を指定
       style={{ 
-        top: positionAndAngle.y, 
-        left: positionAndAngle.x, 
+        top: positionAndAngle.position.y, 
+        left: positionAndAngle.position.x, 
         transform: `rotate(${positionAndAngle.angle}deg)` 
       }} 
       src="./src/assets/img/bullet.gif" 
