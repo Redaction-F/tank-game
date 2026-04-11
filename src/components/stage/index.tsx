@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { GameManeger, IntervalFunction } from "../../logic";
+import { GameManeger, GlobalProps } from "../../logic";
 import { initStageData, StageData } from "./logic";
 import StageAround from "./StageAround";
 import StageMain from "./StageMain";
@@ -8,9 +8,8 @@ import "./gird.css"
 
 // ステージ
 function Stage(props: {
-  gameManeger: GameManeger, 
   setGameManeger: (gameManeger: GameManeger) => void, 
-  addIntervalFunction: (intervalFunction: IntervalFunction) => number
+  globalProps: GlobalProps,
 }) {
   // ステージのデータ
   const [stageData, setStageData] = useState<StageData>(initStageData());
@@ -24,7 +23,7 @@ function Stage(props: {
         "load_stage", 
         { 
           fileName: "stage.json", 
-          gameManeger: props.gameManeger 
+          gameManeger: props.globalProps.gameManeger 
         }
       );
       setStageData(stageRes);
@@ -44,10 +43,8 @@ function Stage(props: {
         key={stageData.stageId + 2000}
       />
       <StageMain 
-        gameManeger={props.gameManeger} 
-        setGameManeger={props.setGameManeger} 
-        addIntervalFunction={props.addIntervalFunction} 
         stage={stageData} 
+        globalProps={props.globalProps}
         key={stageData.stageId}
       />
     </div>

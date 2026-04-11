@@ -1,13 +1,11 @@
-import { GameManeger, IntervalFunction } from "../../logic";
+import { GlobalProps } from "../../logic";
 import { StageData } from "./logic";
 import Player from "../player";
 
 // ステージのメイン部分
-function StageMain(props: { 
-  gameManeger: GameManeger, 
-  setGameManeger: (gameManeger: GameManeger) => void, 
-  addIntervalFunction: (ontervalFunction: IntervalFunction) => number, 
+function StageMain(props: {
   stage: StageData,
+  globalProps: GlobalProps,
 }) {
   return (
     <div className="grid-main">
@@ -32,8 +30,7 @@ function StageMain(props: {
       {/* プレイヤー */}
       <Player 
         startGrid={props.stage.startGrid}
-        gameManeger={props.gameManeger} 
-        addIntervalFunction={props.addIntervalFunction} 
+        globalProps={props.globalProps}
       />
     </div>
   )

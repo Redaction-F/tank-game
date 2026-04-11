@@ -56,4 +56,9 @@ type KeyState = "pressing" | "pressed" | "waiting";
 
 type IntervalFunction = (setGameManeger: (gameManeger: GameManeger) => void) => void;
 
-export { type Controller, type CollisionManeger, type GameManeger, initGameManeger, type IntervalFunction, type Position, type Size }
+type GlobalProps = {
+  gameManeger: GameManeger,
+  addIntervalFunction: (intervalFunction: IntervalFunction) => number,
+};
+
+export { type Controller, type CollisionManeger, type GameManeger, type GlobalProps, initGameManeger, type IntervalFunction, type Position, type Size }

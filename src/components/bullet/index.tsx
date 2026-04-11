@@ -1,15 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { BulletManeger, initBulletManeger } from "./logic";
 import { invoke } from "@tauri-apps/api/core";
-import { GameManeger, IntervalFunction } from "../../logic";
+import { GlobalProps } from "../../logic";
 import "./bullet.css"
 import { initObjectRenderingData, ObjectRenderingData } from "../player/logic";
 
 function Bullet(props: { 
-  gameManeger: GameManeger, 
   initBulletManeger: BulletManeger,  
-  addIntervalFunction: (intervalFunction: IntervalFunction) => number,
   disappear: () => void,
+  globalProps: GlobalProps,
   id: number
 }) {
   // 砲弾の位置と角度
@@ -34,11 +33,11 @@ function Bullet(props: {
         angle: Math.floor(bulletManeger.current.moveData.angle),
       });
       // 砲弾の更新を定期実行
-      intervalId.current = props.addIntervalFunction(async () => {
+      intervalId.current = props.globalProps.addIntervalFunction(async () => {
         // 砲弾の更新
         const [disappear, bulletManegerRes] = await invoke<[boolean, BulletManeger]>("bullet_move_forward", { 
           bulletManeger: bulletManeger.current, 
-          gameManeger: props.gameManeger 
+          gameManeger: props.globalProps.gameManeger 
         });
         // 砲弾管理オブジェクトを更新
         bulletManeger.current = bulletManegerRes;

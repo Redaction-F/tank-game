@@ -1,7 +1,9 @@
 import { gridMapCol, gridMapRow, StageData } from "./logic"
 
 // ステージの外側
-function StageAround(props: { stageData: StageData }) {
+function StageAround(props: { 
+  stageData: StageData 
+}) {
   return (
     <div className="grid-around">
       {/* ステージの外側(上) */}

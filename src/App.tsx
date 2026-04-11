@@ -48,7 +48,10 @@ function App() {
 
   return (
     <main className="container">
-      <Stage gameManeger={gameManeger.current} setGameManeger={setGameManeger} addIntervalFunction={addIntervalFunction} />
+      <Stage setGameManeger={setGameManeger} globalProps={{
+        gameManeger: gameManeger.current,
+        addIntervalFunction: addIntervalFunction
+      }} />
     </main>
   );
 }

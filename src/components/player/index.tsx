@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { initObjectRenderingData, initPlayerManeger, ObjectRenderingData, PlayerManeger } from "./logic"
 import "./player.css"
-import { GameManeger, IntervalFunction } from "../../logic";
+import { GameManeger, GlobalProps } from "../../logic";
 import { invoke } from "@tauri-apps/api/core";
 import { BulletManeger } from "../bullet/logic";
 import Bullet from "../bullet";
@@ -10,8 +10,7 @@ import { GridPosition } from "../stage/logic";
 // プレイヤー
 function Player(props: {
   startGrid: GridPosition,
-  gameManeger: GameManeger, 
-  addIntervalFunction: (intervalFunction: IntervalFunction) => number
+  globalProps: GlobalProps,
 }) {
   // プレイヤーの位置と角度
   const [positionAndAngle, setPositionAndAngle] = useState<ObjectRenderingData>(initObjectRenderingData());
@@ -63,12 +62,12 @@ function Player(props: {
         angle: 0
       });
       // コントローラを定期的に読んで移動させる
-      props.addIntervalFunction(async (setGameManeger) => {
+      props.globalProps.addIntervalFunction(async (setGameManeger) => {
         // コントローラを読む
         const [rendering, bulletManegerRes, playerManegerawaitRes, gameManegerRes] = 
           await invoke<[boolean, BulletManeger | null, PlayerManeger, GameManeger]>("player_move_by_controller", {
             playerManeger: playerManeger.current, 
-            gameManeger: props.gameManeger
+            gameManeger: props.globalProps.gameManeger
           });
         // 動いていないなら残りを飛ばす
         if (!rendering) {
@@ -122,9 +121,8 @@ function Player(props: {
             } else {
               return <Bullet 
                 initBulletManeger={v.maneger} 
-                gameManeger={props.gameManeger}
-                addIntervalFunction={props.addIntervalFunction}
                 disappear={() => setBulletManegersWrapper(i, null)}
+                globalProps={props.globalProps}
                 id={v.id}
                 key={v.id}
               />
