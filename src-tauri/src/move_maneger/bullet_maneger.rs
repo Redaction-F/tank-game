@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     game_maneger::GameManeger, 
     general::{Position, Size}, 
-    move_maneger::{BounceData, Gear, MoveData, MoveManeger, MoveType}
+    move_maneger::{BounceData, Gear, MoveData, MoveManeger, MoveType, player_maneger::PlayerManeger}
 };
 
 #[derive(Serialize, Deserialize)]
@@ -15,16 +15,35 @@ pub struct BulletManeger {
 }
 
 impl BulletManeger {
+    const WIDTH: usize = 8;
+    const HEIGHT: usize = 8;
+
     pub fn new(position: Position, angle: usize) -> Self {
         Self { 
             move_data: MoveData { 
                 position, 
                 angle, 
-                size: Size::new(8, 8),
-                move_type: MoveType::Bounce(BounceData::new(1)), 
+                size: Size::new(BulletManeger::WIDTH, BulletManeger::HEIGHT),
+                move_type: MoveType::Bounce(BounceData::new(2)), 
                 speed: 1.0 
             } 
         } 
+    }
+
+    pub fn player_maneger_bullet(player_maneger: &PlayerManeger) -> Self {
+        Self::new(
+            Position::new(
+                player_maneger.get_move_data().get_position().get_x() 
+                    + player_maneger.get_move_data().get_size().get_width() as f64 / 2.0
+                    + player_maneger.get_move_data().get_size().get_width() as f64 * f64::cos(player_maneger.get_move_data().get_angle_rad()) / 2.0
+                    - BulletManeger::WIDTH as f64 / 2.0, 
+                player_maneger.get_move_data().get_position().get_y() 
+                    + player_maneger.get_move_data().get_size().get_height() as f64 / 2.0
+                    + player_maneger.get_move_data().get_size().get_width() as f64 * f64::sin(player_maneger.get_move_data().get_angle_rad()) / 2.0
+                    - BulletManeger::HEIGHT as f64 / 2.0, 
+            ), 
+            player_maneger.get_move_data().get_angle(),
+        )
     }
 
     pub fn move_forward(&mut self, game_maneger: &GameManeger) -> bool {

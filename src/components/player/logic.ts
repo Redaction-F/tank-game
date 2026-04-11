@@ -8,7 +8,7 @@ type PlayerManeger = {
     angle: number,
     size: {
       width: 32,
-      height: 32,
+      height: 24,
     },
     moveType: "hit",
     speed: 2.0
@@ -24,7 +24,7 @@ const initPlayerManeger = (): PlayerManeger => {
       angle: 0,
       size: {
         width: 32,
-        height: 32,
+        height: 24,
       },
       moveType: "hit",
       speed: 2.0

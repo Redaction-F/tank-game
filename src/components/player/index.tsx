@@ -16,16 +16,35 @@ function Player(props: {
   // プレイヤー管理オブジェクト
   const playerManeger = useRef<PlayerManeger>(initPlayerManeger());
   // 砲弾管理オブジェクト群
+  const maximumBullet: number = 2;
   const [bulletManegers, setBulletManegers] = useState<({
     id: number,
     maneger: BulletManeger,
-  } | null)[]>([null]);
+  } | null)[]>(new Array(maximumBullet).fill(null));
+  const bulletFlag = useRef<boolean[]>(new Array(maximumBullet).fill(false));
+  const setBulletManegersWrapper = (index: number, bulletManeger: BulletManeger | null) => {
+    let newObject = null;
+    if (bulletManeger !== null) {
+      newObject = {
+        id: getNextBulletId(),
+        maneger: bulletManeger
+      }
+    };
+    setBulletManegers((pre) => {
+      const res = [...pre];
+      res[index] = newObject;
+      return res;
+    });
+    bulletFlag.current[index] = (bulletManeger !== null);
+  };
   // 次の砲弾id
   const nextBulletId = useRef<number>(0);
   // 次の砲弾id取得、更新
-  const getNewBulletId = (): number => {
+  const getNextBulletId = (): number => {
+    const res = nextBulletId.current;
     nextBulletId.current += 1;
-    return nextBulletId.current - 1;
+    nextBulletId.current %= 100;
+    return res;
   };
   // 初回のみ実行するためのフラグ
   const firstRendering = useRef<boolean>(false);
@@ -48,10 +67,16 @@ function Player(props: {
         playerManeger.current = playerManegerawaitRes;
         // 砲弾が発射されていたら砲弾を作成
         if (bulletManegerRes !== null) {
-          setBulletManegers([{
-            id: getNewBulletId(),
-            maneger: bulletManegerRes
-          }]);
+          let nullIndex: number = 0;
+          for (const v of bulletFlag.current) {
+            if (!v) {
+              break;
+            }
+            nullIndex += 1;
+          }
+          if (nullIndex < bulletManegers.length) {
+            setBulletManegersWrapper(nullIndex, bulletManegerRes);
+          }
           // スペースキーを押したときだけ更新される
           setGameManeger(gameManegerRes);
         }
@@ -74,9 +99,25 @@ function Player(props: {
 
   return (
     <>
+      {
+        bulletManegers
+          .map((v, i) => {
+            if (v === null) {
+              return <div key={100 + i}></div>
+            } else {
+              return <Bullet 
+                initBulletManeger={v.maneger} 
+                gameManeger={props.gameManeger}
+                addIntervalFunction={props.addIntervalFunction}
+                disappear={() => setBulletManegersWrapper(i, null)}
+                id={v.id}
+                key={v.id}
+              />
+            }
+          })
+      }
       <img 
         className="player" 
-        // 位置と角度を指定
         style={{ 
           top: positionAndAngle.position.y, 
           left: positionAndAngle.position.x, 
@@ -84,21 +125,21 @@ function Player(props: {
         }} 
         src="./src/assets/img/tank.gif" 
       />
-      {
-        bulletManegers
-          .filter((v) => v !== null)
-          .map((v) => (<Bullet 
-            initBulletManeger={v.maneger} 
-            gameManeger={props.gameManeger}
-            addIntervalFunction={props.addIntervalFunction}
-            disappear={() => {
-              console.log("disappear")
-              setBulletManegers([null])}
-            }
-            id={v.id}
-            key={v.id}
-          />))
-      }
+      <div
+        // 位置と角度を指定
+        style={{ 
+          top: positionAndAngle.position.y
+            + playerManeger.current.moveData.size.height / 2
+            + playerManeger.current.moveData.size.width / 2 * Math.sin(positionAndAngle.angle * Math.PI / 180), 
+          left: positionAndAngle.position.x
+            + playerManeger.current.moveData.size.width / 2
+            + playerManeger.current.moveData.size.width / 2 * Math.cos(positionAndAngle.angle * Math.PI / 180), 
+          width: "1px",
+          height: "1px",
+          background: "red",
+          position: "absolute"
+        }} 
+      />
     </>
   )
 }

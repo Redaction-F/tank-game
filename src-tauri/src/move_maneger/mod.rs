@@ -57,33 +57,56 @@ struct MoveData {
 }
 
 impl MoveData {
+    fn get_position(&self) -> &Position {
+        &self.position
+    }
+    fn get_position_mut(&mut self) -> &mut Position {
+        &mut self.position
+    }
+    fn get_angle(&self) -> usize {
+        self.angle
+    }
+    fn get_angle_mut(&mut self) -> &mut usize {
+        &mut self.angle
+    }
+    fn get_size(&self) -> &Size {
+        &self.size
+    }
+    fn get_move_type(&self) -> &MoveType {
+        &self.move_type
+    }
+    fn get_speed(&self) -> f64 {
+        self.speed
+    }
+
     fn get_hit_box(&self) -> HitBox {
         HitBox::from((
-            self.position.clone(),
+            self.get_position().clone(),
             self.size.clone()
         ))
     }
 
+    fn get_angle_rad(&self) -> f64 {
+        (self.get_angle() as f64) / 180.0 * PI
+    }
+
     fn move_diff(&mut self, d: Position) {
-        *self.position.get_x_mut() += d.get_x();
-        *self.position.get_y_mut() += d.get_y();
+        *self.get_position_mut().get_x_mut() += d.get_x();
+        *self.get_position_mut().get_y_mut() += d.get_y();
     }
 
     fn turn(&mut self, a: usize) {
-        self.angle += a;
-        self.angle %= 360;
+        *self.get_angle_mut() += a;
+        *self.get_angle_mut() %= 360;
     }
 
     fn turn_map<F>(&mut self, f: F) 
     where 
         F: Fn(usize) -> usize
     {
-        self.angle = f(self.angle);
-        self.angle %= 360;
-    }
-
-    fn get_angle_rad(&self) -> f64 {
-        (self.angle as f64) / 180.0 * PI
+        let angle: usize = self.get_angle();
+        *self.get_angle_mut() = f(angle);
+        *self.get_angle_mut() %= 360;
     }
 }
 
@@ -106,7 +129,7 @@ trait MoveManeger {
                 } else {
                     b.count += 1;
                     move_data.position = pre_position;
-                    move_data.turn_map(|v| 360 - v);
+                    move_data.turn_map(|v| 540 - v);
                 }
             },
             (HitDirection::Down | HitDirection::Up, MoveType::Bounce(b)) => {
@@ -115,7 +138,7 @@ trait MoveManeger {
                 } else {
                     b.count += 1;
                     move_data.position = pre_position;
-                    move_data.turn_map(|v| 540 - v);
+                    move_data.turn_map(|v| 360 - v);
                 }
             }
         }
