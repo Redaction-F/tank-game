@@ -72,8 +72,12 @@ impl MoveData {
     fn get_size(&self) -> &Size {
         &self.size
     }
+    #[allow(dead_code)]
     fn get_move_type(&self) -> &MoveType {
         &self.move_type
+    }
+    fn get_move_type_mut(&mut self) -> &mut MoveType {
+        &mut self.move_type
     }
     fn get_speed(&self) -> f64 {
         self.speed
@@ -118,17 +122,17 @@ trait MoveManeger {
 
     fn move_diff(&mut self, d: Position, game_maneger: &GameManeger) -> bool {
         let move_data: &mut MoveData = self.get_move_data_mut();
-        let pre_position: Position = move_data.position.clone();
+        let pre_position: Position = move_data.get_position().clone();
         move_data.move_diff(d);
-        match (game_maneger.collision_hit_wall(&move_data.get_hit_box()), &mut move_data.move_type) {
+        match (game_maneger.collision_hit_wall(&move_data.get_hit_box()), move_data.get_move_type_mut()) {
             (HitDirection::NoHit, _) => (),
-            (_, MoveType::Hit) => move_data.position = pre_position,
+            (_, MoveType::Hit) => *move_data.get_position_mut() = pre_position,
             (HitDirection::Right | HitDirection::Left, MoveType::Bounce(b)) => {
                 if b.count >= b.max_count {
                     return true;
                 } else {
                     b.count += 1;
-                    move_data.position = pre_position;
+                    *move_data.get_position_mut() = pre_position;
                     move_data.turn_map(|v| 540 - v);
                 }
             },
@@ -137,7 +141,7 @@ trait MoveManeger {
                     return true;
                 } else {
                     b.count += 1;
-                    move_data.position = pre_position;
+                    *move_data.get_position_mut() = pre_position;
                     move_data.turn_map(|v| 360 - v);
                 }
             }
@@ -154,7 +158,7 @@ trait MoveManeger {
     }
 
     fn move_naturally(&mut self, gear: Gear, game_maneger: &GameManeger) -> bool {
-        let speed: f64 = self.get_move_data().speed;
+        let speed: f64 = self.get_move_data().get_speed();
         let d: Position = match gear {
             Gear::Front => {
                 Position::new(
