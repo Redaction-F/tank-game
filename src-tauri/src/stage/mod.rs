@@ -13,8 +13,10 @@ use crate::{
 /// Read json file and get `StageData`.
 /// * `file_name` - a name of file which have stage data
 /// * `game_maneger` - the game maneger
+/// ## Return
+/// Leaded `StageData` and updated `game_maneger`. If failed, return "Err(Error)".
 #[tauri::command]
-pub fn read_stage(file_name: String, mut game_maneger: GameManeger) -> Result<(StageData, GameManeger), Error> {
+pub fn load_stage(file_name: String, mut game_maneger: GameManeger) -> Result<(StageData, GameManeger), Error> {
     let path_name: String = format!("./resourse/stage/{}", file_name);
     let f: String = fs::read_to_string(path_name)
         .map_err(|e| {

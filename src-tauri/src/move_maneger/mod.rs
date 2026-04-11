@@ -11,37 +11,48 @@ use crate::{
 mod player_maneger;
 mod bullet_maneger;
 
+/// [[tauri command]]
+/// Read the controller and move player. This function should be called constantly.
+/// * `player_maneger` - the player maneger
+/// * `game_maneger` - the game maneger
+/// ## Return
+/// Whether player moved or not, shot `BulletManeger`(if exist), updated `PlayerManeger`, and updated `GameManeger`.
 #[tauri::command]
-pub fn player_maneger_init() -> PlayerManeger {
-    PlayerManeger::new()
+pub fn player_move_by_controller(mut player_maneger: PlayerManeger, mut game_maneger: GameManeger) -> (bool, Option<BulletManeger>, PlayerManeger, GameManeger) {
+    let res: (bool, Option<BulletManeger>) = player_maneger.move_by_controller(&mut game_maneger);
+    (res.0, res.1, player_maneger, game_maneger)
 }
 
+/// [[tauri command]]
+/// Move bullet. This function should be called constantly.
+/// * `bullet_maneger` - the bullet maneger
+/// * `game_maneger` - the game maneger
+/// ## Return
+/// Whether bullet moved or not, updated `BulletManeger`.
 #[tauri::command]
-pub fn player_move_by_controller(mut player_maneger: PlayerManeger, mut game_maneger: GameManeger) -> (PlayerManeger, GameManeger, Option<BulletManeger>, bool) {
-    let res: (Option<BulletManeger>, bool) = player_maneger.move_by_controller(&mut game_maneger);
-    (player_maneger, game_maneger, res.0, res.1)
-}
-
-#[tauri::command]
-pub fn bullet_move_forward(mut bullet_maneger: BulletManeger, game_maneger: GameManeger) -> (BulletManeger, bool) {
+pub fn bullet_move_forward(mut bullet_maneger: BulletManeger, game_maneger: GameManeger) -> (bool, BulletManeger) {
     let res: bool = bullet_maneger.move_forward(&game_maneger);
-    (bullet_maneger, res)
+    (res, bullet_maneger)
 }
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
+/// A set of data required when a object move.
 struct MoveData {
-    // 位置
     #[serde(alias="_position")]
+    /// Position of the object
     position: Position,
-    // 角度
     #[serde(alias="_angle")]
+    /// Angle of the object
     angle: usize,
     #[serde(alias="_size")]
+    /// Size of the object
     size: Size,
     #[serde(alias="_moveType")]
+    /// How to move the object when it hit to a wall
     move_type: MoveType,
     #[serde(alias="_speed")]
+    /// Speed of the object
     speed: f64,
 }
 
@@ -77,7 +88,9 @@ impl MoveData {
 }
 
 trait MoveManeger {
+    /// Get a imutable reference of `MoveData` of the object.
     fn get_move_data(&self) -> &MoveData;
+    /// Get a mutablereference　of `MoveData` of the object.
     fn get_move_data_mut(&mut self) -> &mut MoveData;
 
     fn move_diff(&mut self, d: Position, game_maneger: &GameManeger) -> bool {
@@ -139,17 +152,23 @@ trait MoveManeger {
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
+/// How to move the object when it hit to a wall.
 enum MoveType {
-  Hit,
-  Bounce(BounceData)
+    /// Stop there
+    Hit,
+    /// Bounce off a wall
+    Bounce(BounceData)
 }
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
+/// A set of data required by `MoveType::Bounce`.
 struct BounceData {
     #[serde(alias="_maxCount")]
+    /// Maximum number of times the object bounces off a wall
     max_count: usize,
     #[serde(alias="_count")]
+    /// A number of times the object bounced off a wall
     count: usize
 }
 
@@ -167,6 +186,7 @@ enum TurnDirection {
     Left,
 }
 
+/// whtch direction the object moves naturay
 enum Gear {
     Front,
     Back,

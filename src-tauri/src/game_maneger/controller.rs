@@ -17,7 +17,7 @@ pub struct Controller {
 }
 
 impl Controller {
-    /// Check keydown and get datas of necessary key. This function must be run when a key is pressed.
+    /// Check keydown and get datas of necessary key. This function should be called when a key is pressed.
     /// * `key` - a pressed key
     pub fn check_keydown(&mut self, key: String) {
         match key.as_str() {
@@ -40,7 +40,7 @@ impl Controller {
         }
     }
 
-    /// Check keyup and get datas of necessary key. This function must be run when a key is released.
+    /// Check keyup and get datas of necessary key. This function should be called when a key is released.
     /// * `key` - a released key
     pub fn check_keyup(&mut self, key: String) {
         match key.as_str() {

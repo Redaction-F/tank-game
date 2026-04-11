@@ -51,11 +51,10 @@ function Player(props: {
 
   useEffect(() => {
     const init = async () => {
-      playerManeger.current = await invoke<PlayerManeger>("player_maneger_init");
       // コントローラを定期的に読んで移動させる
       props.addIntervalFunction(async (setGameManeger) => {
-        const [playerManegerawaitRes, gameManegerRes, bulletManegerRes, rendering] = 
-          await invoke<[PlayerManeger, GameManeger, BulletManeger | null, boolean]>("player_move_by_controller", {
+        const [rendering, bulletManegerRes, playerManegerawaitRes, gameManegerRes] = 
+          await invoke<[boolean, BulletManeger | null, PlayerManeger, GameManeger]>("player_move_by_controller", {
             playerManeger: playerManeger.current, 
             gameManeger: props.gameManeger
           });

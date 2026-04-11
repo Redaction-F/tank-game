@@ -2,31 +2,23 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     game_maneger::{GameManeger, Key, KeyState}, 
-    general::{Position, Size}, 
-    move_maneger::{Gear, MoveData, MoveManeger, MoveType, TurnDirection, bullet_maneger::BulletManeger} 
+    move_maneger::{Gear, MoveData, MoveManeger, TurnDirection, bullet_maneger::BulletManeger} 
 };
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
+/// Player logic.
 pub struct PlayerManeger {
     #[serde(alias="_moveData")]
     move_data: MoveData
 }
 
-impl PlayerManeger {
-    pub fn new() -> Self {
-        Self { 
-            move_data: MoveData { 
-                position: Position::new(0.0, 0.0),
-                angle: 0, 
-                size: Size::new(32, 32), 
-                move_type: MoveType::Hit, 
-                speed: 2.0 
-            } 
-        }
-    }
-
-    pub fn move_by_controller(&mut self, game_maneger: &mut GameManeger) -> (Option<BulletManeger>, bool) {
+impl PlayerManeger { 
+    /// Read the controller and move player. This function should be called constantly.
+    /// * `game_maneger` - the game maneger
+    /// ## Return
+    /// Whether player moved or not and shot `BulletManeger`(if exist).
+    pub fn move_by_controller(&mut self, game_maneger: &mut GameManeger) -> (bool, Option<BulletManeger>) {
         let mut flag: bool = false;
         let mut bullet: Option<BulletManeger> = None;
         if let KeyState::Pressing = game_maneger.controller_pressed(Key::Right) {
@@ -49,7 +41,7 @@ impl PlayerManeger {
             bullet = Some(BulletManeger::new(self.get_move_data().position.clone(), self.get_move_data().angle));
             flag = true;
         }
-        (bullet, flag)
+        (flag, bullet)
     }
 }
 

@@ -25,7 +25,7 @@ function Stage(props: {
   useEffect(() => {
     // ステージを読み込み
     const first = async() => {
-      const [stageRes, gameManegerRes] = await invoke<[StageData, GameManeger]>("read_stage", { fileName: "stage.json", gameManeger: props.gameManeger });
+      const [stageRes, gameManegerRes] = await invoke<[StageData, GameManeger]>("load_stage", { fileName: "stage.json", gameManeger: props.gameManeger });
       setStageData(stageRes);
       props.setGameManeger(gameManegerRes);
     }

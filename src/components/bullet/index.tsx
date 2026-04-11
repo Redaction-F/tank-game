@@ -53,7 +53,7 @@ function Bullet(props: {
     console.log(`bullet id\n\tid: ${props.id}`);
     bulletManeger.current = props.initBulletManeger;
     intervalId.current = props.addIntervalFunction(async () => {
-      const [bulletManegerRes, disappear] = await invoke<[BulletManeger, boolean]>("bullet_move_forward", { 
+      const [disappear, bulletManegerRes] = await invoke<[boolean, BulletManeger]>("bullet_move_forward", { 
         bulletManeger: bulletManeger.current, 
         gameManeger: props.gameManeger 
       });

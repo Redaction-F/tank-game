@@ -19,7 +19,7 @@ pub struct CollisionManeger {
 }
 
 impl CollisionManeger {
-    /// Update a stage data. This function must be run when updating a stage.
+    /// Update a stage data. This function should be called when updating a stage.
     /// * `stage` - a stage data
     pub fn update_stage(&mut self, stage: &StageData) {
         // update `walls`
@@ -139,7 +139,7 @@ where
 #[derive(Debug, Clone)]
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
-/// Hit box position and size.
+/// Position and size of hit box.
 pub struct HitBox {
     #[serde(alias="_position")]
     position: Position,

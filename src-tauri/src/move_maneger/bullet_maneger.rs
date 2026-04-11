@@ -8,6 +8,7 @@ use crate::{
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
+/// Bullet logic. Player can shoot a bullet.
 pub struct BulletManeger {
     #[serde(alias="_moveData")]
     move_data: MoveData

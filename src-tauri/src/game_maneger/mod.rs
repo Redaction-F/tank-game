@@ -13,9 +13,11 @@ mod collision_maneger;
 
 /// [[tauri command]]
 /// 
-/// Check keydown and get datas of necessary key. This function must be run when a key is pressed.
+/// Check keydown and get datas of necessary key. This function should be called when a key is pressed.
 /// * `controller` - the controller
 /// * `key` - a pressed key
+/// ## Return
+/// Updated `controller`. 
 #[tauri::command]
 pub fn check_keydown(mut controller: Controller, key: String) -> Controller {
     controller.check_keydown(key);
@@ -24,9 +26,11 @@ pub fn check_keydown(mut controller: Controller, key: String) -> Controller {
 
 /// [[tauri command]]
 /// 
-/// Check keyup and get datas of necessary key. This function must be run when a key is released.
+/// Check keyup and get datas of necessary key. This function should be called when a key is released.
 /// * `controller` - the controller
 /// * `key` - a released key
+/// ## Return
+/// Updated `controller`. 
 #[tauri::command]
 pub fn check_keyup(mut controller: Controller, key: String) -> Controller {
     controller.check_keyup(key);
