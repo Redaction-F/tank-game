@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { initObjectRenderingData, initPlayerManeger, ObjectRenderingData, PlayerManeger } from "./logic"
-import "./player.css"
-import { GameManeger, GlobalProps } from "../../logic";
 import { invoke } from "@tauri-apps/api/core";
+import { GameManeger, GlobalProps } from "../../logic";
+import { initObjectRenderingData, initPlayerManeger, ObjectRenderingData, PlayerManeger } from "./logic"
 import { BulletManeger } from "../bullet/logic";
-import Bullet from "../bullet";
 import { GridPosition } from "../stage/logic";
+import Bullet from "../bullet";
+import "./player.css"
 
 // プレイヤー
 function Player(props: {

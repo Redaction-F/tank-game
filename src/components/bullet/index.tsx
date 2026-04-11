@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { BulletManeger, initBulletManeger } from "./logic";
 import { invoke } from "@tauri-apps/api/core";
 import { GlobalProps } from "../../logic";
-import "./bullet.css"
+import { BulletManeger, initBulletManeger } from "./logic";
 import { initObjectRenderingData, ObjectRenderingData } from "../player/logic";
+import "./bullet.css";
 
 function Bullet(props: { 
   initBulletManeger: BulletManeger,  
