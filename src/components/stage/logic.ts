@@ -1,7 +1,8 @@
 type StageData = {
   stageId: number,
   gridMap: GridMap,
-  startGrid: GridPosition
+  startGrid: GridPosition,
+  enemys: EnemyData[]
 }
 const initStageData = (): StageData => {
   return {
@@ -11,6 +12,7 @@ const initStageData = (): StageData => {
       gridX: 0,
       gridY: 0
     },
+    enemys: []
   }
 };
 const gridMapRow = (stageData: StageData) => {
@@ -29,6 +31,11 @@ type Grid = "floor" | "wall" | "crackedWall";
 type GridPosition = {
   gridX: number,
   gridY: number,
-}
+};
+
+type EnemyData = {
+  enemyType: "orange",
+  startGrid: GridPosition
+};
 
 export { gridMapCol, gridMapRow, type GridPosition, initStageData, type StageData }

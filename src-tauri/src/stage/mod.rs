@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::move_maneger::EnemyTypeVariable;
+
 pub mod tauri_command {
     use std::fs;
     use log::error;
@@ -54,6 +56,8 @@ pub struct StageData {
     grid_map: GridMap,
     #[serde(alias = "start_grid", alias = "_startGrid")]
     start_grid: GridPosition,
+    #[serde(alias = "_enemys")]
+    enemys: Vec<EnemyData>
 }
 
 impl StageData {
@@ -89,4 +93,13 @@ struct GridPosition {
     // snake_case alias for json
     #[serde(alias = "grid_y", alias = "_gridY")]
     grid_y: f64
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all="camelCase")]
+struct EnemyData {
+    #[serde(alias="enemy_type", alias="_kind")]
+    enemy_type: EnemyTypeVariable,
+    #[serde(alias="start_grid", alias="_startGrid")]
+    start_grid: GridPosition
 }

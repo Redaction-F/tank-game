@@ -21,5 +21,14 @@
   "start_grid": {
     "grid_x": 1,
     "grid_y": 8
-  }
+  },
+  "enemys": [
+    {
+      "enemy_type": "orange",
+      "start_grid": {
+        "grid_x": 23,
+        "grid_y": 8
+      }
+    }
+  ]
 }

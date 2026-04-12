@@ -5,7 +5,7 @@ import { initObjectRenderingData, initPlayerManeger, ObjectRenderingData, Player
 import { BulletManeger } from "../bullet/logic";
 import { GridPosition } from "../stage/logic";
 import Bullet from "../bullet";
-import "./style.css"
+import "./style.css";
 
 // プレイヤー
 function Player(props: {

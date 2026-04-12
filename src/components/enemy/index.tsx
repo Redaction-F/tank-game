@@ -4,8 +4,10 @@ import { EnemyManeger, initEnemyManeger } from "./logic";
 import { GlobalProps } from "../../logic";
 import { invoke } from "@tauri-apps/api/core";
 import "./style.css";
+import { GridPosition } from "../stage/logic";
 
 function Enemy(props: {
+  startGrid: GridPosition,
   playerManeger: PlayerManeger | null,
   globalProps: GlobalProps,
 }) {
@@ -16,6 +18,10 @@ function Enemy(props: {
 
   useEffect(() => {
     const first = () => {
+      enemyManeger.current.moveData.position = {
+        x: props.startGrid.gridX * 32 - enemyManeger.current.moveData.size.width / 2,
+        y: props.startGrid.gridY * 32 - enemyManeger.current.moveData.size.height / 2,
+      };
       intervalId.current = props.globalProps.addIntervalFunction(async () => {
         if (props.playerManeger === null) {
           return;

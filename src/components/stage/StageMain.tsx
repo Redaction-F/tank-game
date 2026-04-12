@@ -43,11 +43,16 @@ function StageMain(props: {
         setPlayerManeger={setPlayerManeger}
         globalProps={props.globalProps}
       />
-      <Enemy
-        playerManeger={playerManeger.current}
-        globalProps={props.globalProps}
-        key={playerManegerKey}
-      />
+      {
+        props.stage.enemys.map((v) => (
+          <Enemy
+            startGrid={v.startGrid}
+            playerManeger={playerManeger.current}
+            globalProps={props.globalProps}
+            key={playerManegerKey}
+          />
+        ))
+      }
     </div>
   )
 }

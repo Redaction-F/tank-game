@@ -17,6 +17,7 @@ pub struct EnemyManeger {
 }
 
 impl EnemyManeger {
+    #[allow(unused_variables)]
     pub fn move_auto(&mut self, player_maneger: &PlayerManeger, game_maneger: &GameManeger) {
         match self.enemy_type {
             EnemyType::Orange(_) => {
@@ -79,4 +80,11 @@ impl OrangeEnemyData {
             warn!("WARN: Wrong enemy function is called.");
         };
     }
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all="camelCase")]
+pub enum EnemyTypeVariable {
+    #[serde(alias="_orange")]
+    Orange
 }

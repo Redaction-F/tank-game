@@ -11,6 +11,8 @@ mod player_maneger;
 mod bullet_maneger;
 mod enemy;
 
+pub use enemy::EnemyTypeVariable;
+
 pub mod tauri_command {
     use crate::{
         game_maneger::GameManeger, 
