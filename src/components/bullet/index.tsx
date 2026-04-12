@@ -3,29 +3,28 @@ import { invoke } from "@tauri-apps/api/core";
 import { GlobalProps } from "../../logic";
 import { BulletManeger, initBulletManeger } from "./logic";
 import { initObjectRenderingData, ObjectRenderingData } from "../player/logic";
-import "./bullet.css";
+import "./style.css";
 
 function Bullet(props: { 
   initBulletManeger: BulletManeger,  
   disappear: () => void,
-  globalProps: GlobalProps,
-  id: number
+  globalProps: GlobalProps
 }) {
   // 砲弾の位置と角度
-  const [positionAndAngle, setPositionAndAngle] = useState<ObjectRenderingData>(initObjectRenderingData());
+  const [objectRenderingData, setObjectRenderingData] = useState<ObjectRenderingData>(initObjectRenderingData());
   // 砲弾管理オブジェクト
   const bulletManeger = useRef<BulletManeger>(initBulletManeger());
   // 定期実行関数の削除用
   const intervalId = useRef<number | null>(null);
   // 初回レンダリング用
-  const firstRendering = useRef<boolean>(false);
+  const firstRendered = useRef<boolean>(false);
 
   useEffect(() => {
     const first = () => {
       // 砲弾管理オブジェクトを初期化
       bulletManeger.current = props.initBulletManeger;
       // 砲弾の位置を更新
-      setPositionAndAngle({
+      setObjectRenderingData({
         position: {
           x: Math.floor(bulletManeger.current.moveData.position.x),
           y: Math.floor(bulletManeger.current.moveData.position.y),
@@ -50,7 +49,7 @@ function Bullet(props: {
           }
         }
         // 砲弾の位置を更新
-        setPositionAndAngle({
+        setObjectRenderingData({
           position: {
             x: Math.floor(bulletManeger.current.moveData.position.x),
             y: Math.floor(bulletManeger.current.moveData.position.y),
@@ -59,10 +58,10 @@ function Bullet(props: {
         });
       });
     };
-    if (firstRendering.current) {
+    if (firstRendered.current) {
       return;
     };
-    firstRendering.current = true;
+    firstRendered.current = true;
     first();
   }, []);
 
@@ -71,9 +70,9 @@ function Bullet(props: {
       className="bullet" 
       // 位置と角度を指定
       style={{ 
-        top: positionAndAngle.position.y, 
-        left: positionAndAngle.position.x, 
-        transform: `rotate(${positionAndAngle.angle}deg)` 
+        top: objectRenderingData.position.y, 
+        left: objectRenderingData.position.x, 
+        transform: `rotate(${objectRenderingData.angle}deg)` 
       }} 
       src="./src/assets/img/bullet.gif" 
     />

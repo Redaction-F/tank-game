@@ -5,17 +5,20 @@ import { initObjectRenderingData, initPlayerManeger, ObjectRenderingData, Player
 import { BulletManeger } from "../bullet/logic";
 import { GridPosition } from "../stage/logic";
 import Bullet from "../bullet";
-import "./player.css"
+import "./style.css"
 
 // プレイヤー
 function Player(props: {
   startGrid: GridPosition,
+  setPlayerManeger: (value: PlayerManeger) => void,
   globalProps: GlobalProps,
 }) {
   // プレイヤーの位置と角度
-  const [positionAndAngle, setPositionAndAngle] = useState<ObjectRenderingData>(initObjectRenderingData());
-  // プレイヤー管理オブジェクト
+  const [objectRenderingData, setObjectRenderingData] = useState<ObjectRenderingData>(initObjectRenderingData());
   const playerManeger = useRef<PlayerManeger>(initPlayerManeger());
+  const setPlayerManeger = (value: PlayerManeger) => {
+    playerManeger.current.moveData = value.moveData;
+  };
   // 砲弾管理オブジェクト群
   const maximumBullet: number = 2;
   const [bulletManegers, setBulletManegers] = useState<({
@@ -48,16 +51,17 @@ function Player(props: {
     return res;
   };
   // 初回のみ実行するためのフラグ
-  const firstRendering = useRef<boolean>(false);
+  const firstRendered = useRef<boolean>(false);
 
   useEffect(() => {
-    const first = async () => {
+    const first = () => {
+      props.setPlayerManeger(playerManeger.current);
       const startPosition = {
         x: props.startGrid.gridX * 32 - playerManeger.current.moveData.size.width / 2,
         y: props.startGrid.gridY * 32 - playerManeger.current.moveData.size.height / 2,
       };
       playerManeger.current.moveData.position = startPosition;
-      setPositionAndAngle({
+      setObjectRenderingData({
         position: startPosition,
         angle: 0
       });
@@ -74,7 +78,7 @@ function Player(props: {
           return;
         }
         // プレイヤー管理オブジェクトを更新
-        playerManeger.current = playerManegerawaitRes;
+        setPlayerManeger(playerManegerawaitRes);
         // 砲弾が発射されていたら砲弾を作成
         if (bulletManegerRes !== null) {
           let nullIndex: number = 0;
@@ -91,7 +95,7 @@ function Player(props: {
           setGameManeger(gameManegerRes);
         }
         // プレイヤーの位置を更新
-        setPositionAndAngle({
+        setObjectRenderingData({
           position: {
             x: Math.floor(playerManeger.current.moveData.position.x),
             y: Math.floor(playerManeger.current.moveData.position.y),
@@ -99,11 +103,11 @@ function Player(props: {
           angle: Math.floor(playerManeger.current.moveData.angle),
         });
       });
-    }
-    if (firstRendering.current) {
+    };
+    if (firstRendered.current) {
       return;
     }
-    firstRendering.current = true;
+    firstRendered.current = true;
     first();
   }, []);
 
@@ -123,7 +127,6 @@ function Player(props: {
                 initBulletManeger={v.maneger} 
                 disappear={() => setBulletManegersWrapper(i, null)}
                 globalProps={props.globalProps}
-                id={v.id}
                 key={v.id}
               />
             }
@@ -132,9 +135,9 @@ function Player(props: {
       <img 
         className="player" 
         style={{ 
-          top: positionAndAngle.position.y, 
-          left: positionAndAngle.position.x, 
-          transform: `rotate(${positionAndAngle.angle}deg)` 
+          top: objectRenderingData.position.y, 
+          left: objectRenderingData.position.x, 
+          transform: `rotate(${objectRenderingData.angle}deg)` 
         }} 
         src="./src/assets/img/tank.gif"
       />

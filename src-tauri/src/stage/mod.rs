@@ -1,47 +1,46 @@
-use std::fs;
-
-use log::error;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    game_maneger::GameManeger, 
-    general::{Error, ErrorVariant},
-};
+pub mod tauri_command {
+    use std::fs;
+    use log::error;
 
-/// [[tauri command]]
-/// 
-/// Read json file and get `StageData`.
-/// * `file_name` - a name of file which have stage data
-/// * `game_maneger` - the game maneger
-/// ## Return
-/// Leaded `StageData` and updated `game_maneger`. If failed, return "Err(Error)".
-#[tauri::command]
-pub fn load_stage(file_name: String, mut game_maneger: GameManeger) -> Result<(StageData, GameManeger), Error> {
-    let path_name: String = format!("./resourse/stage/{}", file_name);
-    let f: String = fs::read_to_string(path_name)
-        .map_err(|e| {
-            let e: Error = Error::from_error(
-                ErrorVariant::IOError,
-                "Failed to read stage data.",
-                "ステージの読み込みに失敗しました。",
+    use crate::{game_maneger::GameManeger, general::{Error, ErrorVariant}, stage::StageData};
+
+    /// [[tauri command]]
+    /// 
+    /// Read json file and get `StageData`.
+    /// * `file_name` - a name of file which have stage data
+    /// * `game_maneger` - the game maneger
+    /// ## Return
+    /// Leaded `StageData` and updated `game_maneger`. If failed, return "Err(Error)".
+    #[tauri::command]
+    pub fn load_stage(file_name: String, mut game_maneger: GameManeger) -> Result<(StageData, GameManeger), Error> {
+        let path_name: String = format!("./resourse/stage/{}", file_name);
+        let f: String = fs::read_to_string(path_name)
+            .map_err(|e| {
+                let e: Error = Error::from_error(
+                    ErrorVariant::IOError,
+                    "Failed to read stage data.",
+                    "ステージの読み込みに失敗しました。",
+                    e
+                );
+                error!("{}", e);
                 e
-            );
-            error!("{}", e);
-            e
-        })?;
-    let stage: StageData = serde_json::from_str(&f)
-        .map_err(|e| {
-            let e: Error = Error::from_error(
-                ErrorVariant::FileError,
-                "Failed to parse stage data.",
-                "ステージの読み込みに失敗しました。",
+            })?;
+        let stage: StageData = serde_json::from_str(&f)
+            .map_err(|e| {
+                let e: Error = Error::from_error(
+                    ErrorVariant::FileError,
+                    "Failed to parse stage data.",
+                    "ステージの読み込みに失敗しました。",
+                    e
+                );
+                error!("{}", e);
                 e
-            );
-            error!("{}", e);
-            e
-        })?;
-    game_maneger.update_stage(&stage);
-    Ok((stage, game_maneger))
+            })?;
+        game_maneger.update_stage(&stage);
+        Ok((stage, game_maneger))
+    }
 }
 
 /// A data of tank-game stage.

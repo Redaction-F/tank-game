@@ -4,7 +4,7 @@ import { GameManeger, GlobalProps } from "../../logic";
 import { initStageData, StageData } from "./logic";
 import StageAround from "./StageAround";
 import StageMain from "./StageMain";
-import "./gird.css"
+import "./style.css"
 
 // ステージ
 function Stage(props: {
@@ -14,7 +14,7 @@ function Stage(props: {
   // ステージのデータ
   const [stageData, setStageData] = useState<StageData>(initStageData());
   // 初回のみ実行するためのフラグ
-  const firstRendering = useRef<boolean>(false);
+  const firstRendered = useRef<boolean>(false);
 
   useEffect(() => {
     // ステージを読み込み
@@ -29,10 +29,10 @@ function Stage(props: {
       setStageData(stageRes);
       props.setGameManeger(gameManegerRes);
     };
-    if (firstRendering.current) {
+    if (firstRendered.current) {
       return;
     }
-    firstRendering.current = true;
+    firstRendered.current = true;
     first();
   }, []);
 

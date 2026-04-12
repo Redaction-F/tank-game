@@ -16,7 +16,7 @@ type BulletManeger = {
         count: number
       }
     },
-    speed: 1.5
+    speed: 2.5
   }
 };
 const initBulletManeger = (): BulletManeger => {
@@ -37,7 +37,7 @@ const initBulletManeger = (): BulletManeger => {
           count: 0
         }
       },
-      speed: 1.5,
+      speed: 2.5,
     },
   };
 };

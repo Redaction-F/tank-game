@@ -11,30 +11,34 @@ pub use collision_maneger::{HitBox, HitDirection};
 mod controller;
 mod collision_maneger;
 
-/// [[tauri command]]
-/// 
-/// Check keydown and get datas of necessary key. This function should be called when a key is pressed.
-/// * `controller` - the controller
-/// * `key` - a pressed key
-/// ## Return
-/// Updated `controller`. 
-#[tauri::command]
-pub fn check_keydown(mut controller: Controller, key: String) -> Controller {
-    controller.check_keydown(key);
-    controller
-}
+pub mod tauri_command {
+    use crate::game_maneger::controller::Controller;
 
-/// [[tauri command]]
-/// 
-/// Check keyup and get datas of necessary key. This function should be called when a key is released.
-/// * `controller` - the controller
-/// * `key` - a released key
-/// ## Return
-/// Updated `controller`. 
-#[tauri::command]
-pub fn check_keyup(mut controller: Controller, key: String) -> Controller {
-    controller.check_keyup(key);
-    controller
+    /// [[tauri command]]
+    /// 
+    /// Check keydown and get datas of necessary key. This function should be called when a key is pressed.
+    /// * `controller` - the controller
+    /// * `key` - a pressed key
+    /// ## Return
+    /// Updated `controller`. 
+    #[tauri::command]
+    pub fn check_keydown(mut controller: Controller, key: String) -> Controller {
+        controller.check_keydown(key);
+        controller
+    }
+
+    /// [[tauri command]]
+    /// 
+    /// Check keyup and get datas of necessary key. This function should be called when a key is released.
+    /// * `controller` - the controller
+    /// * `key` - a released key
+    /// ## Return
+    /// Updated `controller`. 
+    #[tauri::command]
+    pub fn check_keyup(mut controller: Controller, key: String) -> Controller {
+        controller.check_keyup(key);
+        controller
+    }
 }
 
 #[derive(Serialize, Deserialize)]

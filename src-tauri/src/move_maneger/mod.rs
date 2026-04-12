@@ -4,35 +4,48 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     game_maneger::{GameManeger, HitBox, HitDirection}, 
-    general::{Position, Size}, 
-    move_maneger::{bullet_maneger::BulletManeger, player_maneger::PlayerManeger}, 
+    general::{Position, Size}
 };
 
 mod player_maneger;
 mod bullet_maneger;
+mod enemy;
 
-/// [[tauri command]]
-/// Read the controller and move player. This function should be called constantly.
-/// * `player_maneger` - the player maneger
-/// * `game_maneger` - the game maneger
-/// ## Return
-/// Whether player moved or not, shot `BulletManeger`(if exist), updated `PlayerManeger`, and updated `GameManeger`.
-#[tauri::command]
-pub fn player_move_by_controller(mut player_maneger: PlayerManeger, mut game_maneger: GameManeger) -> (bool, Option<BulletManeger>, PlayerManeger, GameManeger) {
-    let res: (bool, Option<BulletManeger>) = player_maneger.move_by_controller(&mut game_maneger);
-    (res.0, res.1, player_maneger, game_maneger)
-}
+pub mod tauri_command {
+    use crate::{
+        game_maneger::GameManeger, 
+        move_maneger::{bullet_maneger::BulletManeger, enemy::EnemyManeger, player_maneger::PlayerManeger}
+    };
 
-/// [[tauri command]]
-/// Move bullet. This function should be called constantly.
-/// * `bullet_maneger` - the bullet maneger
-/// * `game_maneger` - the game maneger
-/// ## Return
-/// Whether bullet disappeared or not, updated `BulletManeger`.
-#[tauri::command]
-pub fn bullet_move_forward(mut bullet_maneger: BulletManeger, game_maneger: GameManeger) -> (bool, BulletManeger) {
-    let res: bool = bullet_maneger.move_forward(&game_maneger);
-    (res, bullet_maneger)
+    /// [[tauri command]]
+    /// Read the controller and move player. This function should be called constantly.
+    /// * `player_maneger` - the player maneger
+    /// * `game_maneger` - the game maneger
+    /// ## Return
+    /// Whether player moved or not, shot `BulletManeger`(if exist), updated `PlayerManeger`, and updated `GameManeger`.
+    #[tauri::command]
+    pub fn player_move_by_controller(mut player_maneger: PlayerManeger, mut game_maneger: GameManeger) -> (bool, Option<BulletManeger>, PlayerManeger, GameManeger) {
+        let res: (bool, Option<BulletManeger>) = player_maneger.move_by_controller(&mut game_maneger);
+        (res.0, res.1, player_maneger, game_maneger)
+    }
+
+    /// [[tauri command]]
+    /// Move bullet. This function should be called constantly.
+    /// * `bullet_maneger` - the bullet maneger
+    /// * `game_maneger` - the game maneger
+    /// ## Return
+    /// Whether bullet disappeared or not, updated `BulletManeger`.
+    #[tauri::command]
+    pub fn bullet_move_forward(mut bullet_maneger: BulletManeger, game_maneger: GameManeger) -> (bool, BulletManeger) {
+        let res: bool = bullet_maneger.move_forward(&game_maneger);
+        (res, bullet_maneger)
+    }
+
+    #[tauri::command]
+    pub fn enemy_move_auto(mut enemy_maneger: EnemyManeger, player_maneger: PlayerManeger, game_maneger: GameManeger) -> EnemyManeger {
+        enemy_maneger.move_auto(&player_maneger, &game_maneger);
+        enemy_maneger
+    }
 }
 
 #[derive(Serialize, Deserialize)]
