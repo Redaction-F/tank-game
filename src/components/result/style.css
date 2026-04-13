@@ -1,0 +1,16 @@
+.result-wrapper {
+  padding-top: 30vh;
+}
+
+.result-label {
+  text-align: center;
+  font-size: 100px;
+}
+
+.result-button {
+  margin: 0 auto;
+  display: block;
+  width: 200px;
+  height: 50px;
+  font-size: 20px;
+}

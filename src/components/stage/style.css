@@ -1,0 +1,40 @@
+/* ステージ全体 */
+.stage {
+  border: 5px solid #404040;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* ステージのグリッド(メイン部分) */
+.grid-main {
+  position: absolute;
+  top: 32px;
+  left: 32px;
+}
+
+/* ステージのグリッド列 */
+.grid-row {
+  display: flex;
+}
+
+/* ステージのグリッド */
+.grid {
+  display: block;
+  width: 32px;
+  height: 32px;
+}
+
+/* 床グリッド */
+.grid-floor {
+  background-image: url("../../assets/img/floor.gif");
+}
+
+/* 壁グリッド */
+.grid-wall {
+  background-image: url("../../assets/img/wall.gif");
+}
+
+/* ひび割れた壁グリッド */
+.grid-cracked-wall {
+  background-image: url("../../assets/img/cracked_wall.gif");
+}
