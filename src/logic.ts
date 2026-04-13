@@ -56,7 +56,7 @@ type Controller = {
 type CollisionManeger = {
   walls: HitBox[],
   playerManeger: PlayerManeger,
-  enemyManegers: EnemyManeger[],
+  enemyManegers: (EnemyManeger | null)[],
   stageSize: Size
 };
 

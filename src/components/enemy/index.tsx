@@ -51,11 +51,20 @@ function Enemy(props: {
   useEffect(() => {
     const first = () => {
       const enemyManegers = props.globalProps.gameManeger.collisionManeger.enemyManegers;
-      enemyManegers[props.enemyManegerIndex].moveData.position = {
-        x: props.startGrid.gridX * 32 - enemyManegers[props.enemyManegerIndex].moveData.size.width / 2,
-        y: props.startGrid.gridY * 32 - enemyManegers[props.enemyManegerIndex].moveData.size.height / 2,
+      if (enemyManegers[props.enemyManegerIndex] === null) {
+        return;
+      }
+      enemyManegers[props.enemyManegerIndex]!.moveData.position = {
+        x: props.startGrid.gridX * 32 - enemyManegers[props.enemyManegerIndex]!.moveData.size.width / 2,
+        y: props.startGrid.gridY * 32 - enemyManegers[props.enemyManegerIndex]!.moveData.size.height / 2,
       };
       intervalId.current = props.globalProps.addIntervalFunction(async () => {
+        if (enemyManegers[props.enemyManegerIndex] === null) {
+          if (intervalId.current !== null) {
+            clearInterval(intervalId.current);
+          }
+          return;
+        }
         const [bulletManegerRes, enemyRes] = await invoke<[BulletManeger | null, EnemyManeger]>("enemy_move_auto", { 
           enemyManeger: enemyManegers[props.enemyManegerIndex],
           playerManeger: props.globalProps.gameManeger.collisionManeger.playerManeger,
@@ -77,10 +86,10 @@ function Enemy(props: {
         }
         setObjectRenderingData({
           position: {
-            x: enemyManegers[props.enemyManegerIndex].moveData.position.x,
-            y: enemyManegers[props.enemyManegerIndex].moveData.position.y
+            x: enemyManegers[props.enemyManegerIndex]!.moveData.position.x,
+            y: enemyManegers[props.enemyManegerIndex]!.moveData.position.y
           },
-          angle: enemyManegers[props.enemyManegerIndex].moveData.angle
+          angle: enemyManegers[props.enemyManegerIndex]!.moveData.angle
         });
       });
     };
@@ -105,15 +114,19 @@ function Enemy(props: {
             />
         ))
       }
-      <img 
-        className="enemy" 
-        style={{ 
-          top: objectRenderingData.position.y, 
-          left: objectRenderingData.position.x, 
-          transform: `rotate(${objectRenderingData.angle}deg)` 
-        }}
-        src="./src/assets/img/enemy.gif"
-      />
+      {
+        props.globalProps.gameManeger.collisionManeger.enemyManegers[props.enemyManegerIndex] === null
+        ? <></>
+        : <img 
+            className="enemy" 
+            style={{ 
+              top: objectRenderingData.position.y, 
+              left: objectRenderingData.position.x, 
+              transform: `rotate(${objectRenderingData.angle}deg)` 
+            }}
+            src="./src/assets/img/enemy.gif"
+          />
+      }
     </div>
   );
 }

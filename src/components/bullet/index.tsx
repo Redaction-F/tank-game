@@ -18,6 +18,13 @@ function Bullet(props: {
   const intervalId = useRef<number | null>(null);
   // 初回レンダリング用
   const firstRendered = useRef<boolean>(false);
+  const disappear = () => {
+    props.disappear();
+    // 定期実行を削除
+    if (intervalId.current !== null) {
+      clearInterval(intervalId.current);
+    }
+  };
 
   useEffect(() => {
     const first = () => {
@@ -34,7 +41,7 @@ function Bullet(props: {
       // 砲弾の更新を定期実行
       intervalId.current = props.globalProps.addIntervalFunction(async () => {
         // 砲弾の更新
-        const [disappear, hitTank, bulletManegerRes] = await invoke<[boolean, HitTank, BulletManeger]>("bullet_move_forward", { 
+        const [disappeared, hitTank, bulletManegerRes] = await invoke<[boolean, HitTank, BulletManeger]>("bullet_move_forward", { 
           bulletManeger: bulletManeger.current, 
           gameManeger: props.globalProps.gameManeger 
         });
@@ -42,18 +49,15 @@ function Bullet(props: {
           if (hitTank === "player") {
             console.log(`hitTank: player`);
           } else {
-            console.log(`hitTank: enemy(${hitTank.enemy})`);
+            props.globalProps.gameManeger.collisionManeger.enemyManegers[hitTank.enemy] = null;
+            disappear();
           }
         }
         // 砲弾管理オブジェクトを更新
         bulletManeger.current = bulletManegerRes;
         // 砲弾が消滅していたら
-        if (disappear) {
-          props.disappear();
-          // 定期実行を削除
-          if (intervalId.current !== null) {
-            clearInterval(intervalId.current);
-          }
+        if (disappeared) {
+          disappear();
         }
         // 砲弾の位置を更新
         setObjectRenderingData({

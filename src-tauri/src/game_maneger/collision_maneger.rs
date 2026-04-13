@@ -17,7 +17,7 @@ pub struct CollisionManeger {
     #[serde(alias="_playerManeger")]
     player_maneger: PlayerManeger,
     #[serde(alias="_enemyManegers")]
-    enemy_manegers: Vec<EnemyManeger>,
+    enemy_manegers: Vec<Option<EnemyManeger>>,
     #[serde(alias="_stageSize")]
     stage_size: Size,
 }
@@ -174,9 +174,15 @@ impl CollisionManeger {
         self.enemy_manegers
             .iter()
             .enumerate()
-            .find_map(|(i, v)| match CollisionManeger::hit(hit_box, &v.get_hit_box()) {
-                HitDirection::NoHit => None,
-                _ => Some(i)
+            .find_map(|(i, v)| {
+                if let Some(v) = v {
+                    match CollisionManeger::hit(hit_box, &v.get_hit_box()) {
+                        HitDirection::NoHit => None,
+                        _ => Some(i)
+                    }
+                } else {
+                    None
+                }
             })
     }
 }
