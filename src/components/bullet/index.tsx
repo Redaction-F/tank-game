@@ -47,7 +47,7 @@ function Bullet(props: {
         });
         if (hitTank !== "noHit") {
           if (hitTank === "player") {
-            console.log(`hitTank: player`);
+            props.globalProps.gameManeger.collisionManeger.playerManeger = null;
           } else {
             props.globalProps.gameManeger.collisionManeger.enemyManegers[hitTank.enemy] = null;
             disappear();

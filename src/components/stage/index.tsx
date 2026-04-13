@@ -6,15 +6,19 @@ import StageAround from "./StageAround";
 import StageMain from "./StageMain";
 import "./style.css"
 import { initEnemyManeger } from "../enemy/logic";
+import { ResultKind } from "../result/logic";
+import { initPlayerManeger } from "../player/logic";
 
 // ステージ
 function Stage(props: {
   stageName: string,
+  stageEnd: (resultKind: ResultKind) => void,
   setGameManeger: (gameManeger: GameManeger) => void, 
   globalProps: GlobalProps,
 }) {
   // ステージのデータ
   const [stageData, setStageData] = useState<StageData>(initStageData());
+  const intervalId = useRef<number | null>(null);
   // 初回のみ実行するためのフラグ
   const firstRendered = useRef<boolean>(false);
 
@@ -30,7 +34,22 @@ function Stage(props: {
       );
       setStageData(stageRes);
       props.setGameManeger(gameManegerRes);
+      props.globalProps.gameManeger.collisionManeger.playerManeger = initPlayerManeger();
       props.globalProps.gameManeger.collisionManeger.enemyManegers = new Array(stageRes.enemys.length).fill(null).map(() => initEnemyManeger());
+      intervalId.current = props.globalProps.addIntervalFunction(() => {
+        if (props.globalProps.gameManeger.collisionManeger.enemyManegers.every((v) => v === null)) {
+          props.stageEnd("clear");
+          if (intervalId.current !== null) {
+            clearInterval(intervalId.current)
+          }
+        }
+        if (props.globalProps.gameManeger.collisionManeger.playerManeger === null) {
+          props.stageEnd("gameover");
+          if (intervalId.current !== null) {
+            clearInterval(intervalId.current)
+          }
+        }
+      });
     };
     if (firstRendered.current) {
       return;
@@ -52,7 +71,7 @@ function Stage(props: {
         key={stageData.stageId + 2000}
       />
       <StageMain 
-        stage={stageData} 
+        stage={stageData}
         globalProps={props.globalProps}
         key={stageData.stageId}
       />

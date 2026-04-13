@@ -70,7 +70,6 @@ impl OrangeEnemyData {
             if d.shoot_cooldown.is_none() 
                 && player_maneger.get_move_data().get_position().exist_in_direction(&position, angle)
                 && !game_maneger.collision_ray_hit_wall(&position, player_maneger.get_move_data().get_position()) {
-                println!("shot!");
                 d.shoot_cooldown = Some(OrangeEnemyData::SHOOT_COOLDOWN);
                 bullet_flag = true;
             }

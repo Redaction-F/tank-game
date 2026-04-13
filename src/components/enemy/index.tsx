@@ -59,7 +59,7 @@ function Enemy(props: {
         y: props.startGrid.gridY * 32 - enemyManegers[props.enemyManegerIndex]!.moveData.size.height / 2,
       };
       intervalId.current = props.globalProps.addIntervalFunction(async () => {
-        if (enemyManegers[props.enemyManegerIndex] === null) {
+        if (props.globalProps.gameManeger.collisionManeger.playerManeger === null || enemyManegers[props.enemyManegerIndex] === null) {
           if (intervalId.current !== null) {
             clearInterval(intervalId.current);
           }

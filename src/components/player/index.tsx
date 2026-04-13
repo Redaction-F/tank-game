@@ -15,6 +15,9 @@ function Player(props: {
   // プレイヤーの位置と角度
   const [objectRenderingData, setObjectRenderingData] = useState<ObjectRenderingData>(initObjectRenderingData());
   const setPlayerManeger = (value: PlayerManeger) => {
+    if (props.globalProps.gameManeger.collisionManeger.playerManeger === null) {
+      return;
+    }
     props.globalProps.gameManeger.collisionManeger.playerManeger.moveData = value.moveData;
   };
   // 砲弾管理オブジェクト群
@@ -53,6 +56,9 @@ function Player(props: {
 
   useEffect(() => {
     const first = () => {
+      if (props.globalProps.gameManeger.collisionManeger.playerManeger === null) {
+        return;
+      }
       const startPosition = {
         x: props.startGrid.gridX * 32 - props.globalProps.gameManeger.collisionManeger.playerManeger.moveData.size.width / 2,
         y: props.startGrid.gridY * 32 - props.globalProps.gameManeger.collisionManeger.playerManeger.moveData.size.height / 2,
@@ -64,6 +70,9 @@ function Player(props: {
       });
       // コントローラを定期的に読んで移動させる
       props.globalProps.addIntervalFunction(async (setGameManeger) => {
+        if (props.globalProps.gameManeger.collisionManeger.playerManeger === null) {
+          return;
+        }
         // コントローラを読む
         const [rendering, bulletManegerRes, playerManegerRes, gameManegerRes] = 
           await invoke<[boolean, BulletManeger | null, PlayerManeger, GameManeger]>("player_move_by_controller", {

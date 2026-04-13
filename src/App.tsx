@@ -4,6 +4,8 @@ import { Controller, GameManeger, GlobalProps, initGameManeger, IntervalFunction
 import Stage from "./components/stage";
 import Menu from "./components/menu";
 import "./style.css";
+import Result from "./components/result";
+import { ResultKind } from "./components/result/logic";
 
 function App() {
   // ゲーム管理オブジェクト
@@ -30,33 +32,44 @@ function App() {
   const [mode, setMode] = useState<Mode>("select");
   const stageStart = (stageName: string) => {
     setMode({
-      game: {
-        stageName
-      }
+      mode: "game",
+      stageName
     });
+  };
+  const stageEnd = (resultKind: ResultKind) => {
+    setMode({
+      mode: "result",
+      resultKind
+    });
+  };
+  const backToSelect = () => {
+    setMode("select");
   };
 
   useEffect(() => {
+    const first = async() => {
+      // キー入力に対するイベントを設定
+      document.addEventListener("keydown", async (e: KeyboardEvent) => {
+        const controllerRes = await invoke<Controller>("check_keydown", { controller: gameManeger.current.controller, key: e.key });
+        setGameManeger({
+          controller: controllerRes,
+          collisionManeger: gameManeger.current.collisionManeger
+        });
+      }, false);
+      document.addEventListener("keyup", async (e: KeyboardEvent) => {
+        const controllerRes = await invoke<Controller>("check_keyup", { controller: gameManeger.current.controller, key: e.key });
+        setGameManeger({
+          controller: controllerRes,
+          collisionManeger: gameManeger.current.collisionManeger
+        });
+      }, false);
+    };
     // 初回のみ実行
     if (firstRendered.current) {
       return;
     }
     firstRendered.current = true;
-    // キー入力に対するイベントを設定
-    document.addEventListener("keydown", async (e: KeyboardEvent) => {
-      const controllerRes = await invoke<Controller>("check_keydown", { controller: gameManeger.current.controller, key: e.key });
-      setGameManeger({
-        controller: controllerRes,
-        collisionManeger: gameManeger.current.collisionManeger
-      });
-    }, false);
-    document.addEventListener("keyup", async (e: KeyboardEvent) => {
-      const controllerRes = await invoke<Controller>("check_keyup", { controller: gameManeger.current.controller, key: e.key });
-      setGameManeger({
-        controller: controllerRes,
-        collisionManeger: gameManeger.current.collisionManeger
-      });
-    }, false);
+    first();
   }, []);
 
   return (
@@ -66,10 +79,16 @@ function App() {
         ? <Menu 
             stageStart={stageStart}
           />
-        : <Stage 
-            stageName={mode.game.stageName}
+        : mode.mode === "game"
+        ? <Stage 
+            stageName={mode.stageName}
+            stageEnd={stageEnd}
             setGameManeger={setGameManeger} 
             globalProps={globalProps} 
+          />
+        : <Result 
+            result={mode.resultKind}
+            backToSelect={backToSelect}
           />
       }
     </main>

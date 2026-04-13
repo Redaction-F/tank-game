@@ -2,6 +2,7 @@
 
 import { EnemyManeger } from "./components/enemy/logic";
 import { initPlayerManeger, PlayerManeger } from "./components/player/logic";
+import { ResultKind } from "./components/result/logic";
 
 // 位置
 type Position = {
@@ -55,7 +56,7 @@ type Controller = {
 
 type CollisionManeger = {
   walls: HitBox[],
-  playerManeger: PlayerManeger,
+  playerManeger: PlayerManeger | null,
   enemyManegers: (EnemyManeger | null)[],
   stageSize: Size
 };
@@ -70,9 +71,11 @@ type GlobalProps = {
 };
 
 type Mode = "select" | {
-  game: {
-    stageName: string
-  }
+  mode: "game",
+  stageName: string
+} | {
+  mode: "result",
+  resultKind: ResultKind
 };
 
 export { type Controller, type CollisionManeger, type GameManeger, type GlobalProps, initGameManeger, type IntervalFunction, type Mode, type Position, type Size }
