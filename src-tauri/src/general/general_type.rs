@@ -51,7 +51,7 @@ impl Position {
             }
         };
         let diff_angle: f64 =  (360.0 + (angle as f64) - direction_angle) % 360.0;
-        return diff_angle <= 10.0 || 350.0 <= diff_angle;
+        return diff_angle <= 8.0 || 352.0 <= diff_angle;
     }
 }
 
