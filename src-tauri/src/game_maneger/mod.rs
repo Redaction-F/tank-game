@@ -63,6 +63,14 @@ impl GameManeger {
         self.collision_maneger.ray_hit_wall(ray_start, ray_end)
     }
 
+    pub fn collision_object_hit_player(&self, hit_box: &HitBox) -> bool {
+        self.collision_maneger.object_hit_player(hit_box)
+    }
+
+    pub fn collision_object_hit_enemys(&self, hit_box: &HitBox) -> Option<usize> {
+        self.collision_maneger.object_hit_enemys(hit_box)
+    }
+
     pub fn controller_pressed(&mut self, key: Key) -> KeyState {
         self.controller.pressed(key)
     }

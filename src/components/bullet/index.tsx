@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { GlobalProps } from "../../logic";
-import { BulletManeger, initBulletManeger } from "./logic";
+import { BulletManeger, HitTank, initBulletManeger } from "./logic";
 import { initObjectRenderingData, ObjectRenderingData } from "../player/logic";
 import "./style.css";
 
@@ -34,10 +34,17 @@ function Bullet(props: {
       // 砲弾の更新を定期実行
       intervalId.current = props.globalProps.addIntervalFunction(async () => {
         // 砲弾の更新
-        const [disappear, bulletManegerRes] = await invoke<[boolean, BulletManeger]>("bullet_move_forward", { 
+        const [disappear, hitTank, bulletManegerRes] = await invoke<[boolean, HitTank, BulletManeger]>("bullet_move_forward", { 
           bulletManeger: bulletManeger.current, 
           gameManeger: props.globalProps.gameManeger 
         });
+        if (hitTank !== "noHit") {
+          if (hitTank === "player") {
+            console.log(`hitTank: player`);
+          } else {
+            console.log(`hitTank: enemy(${hitTank.enemy})`);
+          }
+        }
         // 砲弾管理オブジェクトを更新
         bulletManeger.current = bulletManegerRes;
         // 砲弾が消滅していたら

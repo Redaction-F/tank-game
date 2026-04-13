@@ -162,6 +162,23 @@ impl CollisionManeger {
         }
         false
     }
+
+    pub fn object_hit_player(&self, hit_box: &HitBox) -> bool {
+        match CollisionManeger::hit(hit_box, &self.player_maneger.get_hit_box()) {
+            HitDirection::NoHit => false,
+            _ => true
+        }
+    }
+
+    pub fn object_hit_enemys(&self, hit_box: &HitBox) -> Option<usize> {
+        self.enemy_manegers
+            .iter()
+            .enumerate()
+            .find_map(|(i, v)| match CollisionManeger::hit(hit_box, &v.get_hit_box()) {
+                HitDirection::NoHit => None,
+                _ => Some(i)
+            })
+    }
 }
 
 fn map_f64<F>(a: f64, b: f64, f: F) -> f64 

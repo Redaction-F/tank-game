@@ -31,7 +31,6 @@ function StageMain(props: {
       {/* プレイヤー */}
       <Player 
         startGrid={props.stage.startGrid}
-        playerManeger={props.globalProps.gameManeger.collisionManeger.playerManeger}
         globalProps={props.globalProps}
       />
       {
@@ -39,7 +38,6 @@ function StageMain(props: {
           <Enemy
             startGrid={v.startGrid}
             enemyManegerIndex={i}
-            playerManeger={props.globalProps.gameManeger.collisionManeger.playerManeger}
             globalProps={props.globalProps}
             key={props.stage.stageId}
           />

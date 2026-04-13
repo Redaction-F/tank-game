@@ -2,7 +2,7 @@ use log::warn;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    game_maneger::GameManeger, 
+    game_maneger::{GameManeger, HitBox}, 
     general::Position, 
     move_maneger::{MoveData, MoveManeger, TurnDirection, bullet_maneger::BulletManeger, player_maneger::PlayerManeger}
 };
@@ -17,7 +17,6 @@ pub struct EnemyManeger {
 }
 
 impl EnemyManeger {
-    #[allow(unused_variables)]
     pub fn move_auto(&mut self, player_maneger: &PlayerManeger, game_maneger: &GameManeger) -> Option<BulletManeger> {
         match self.enemy_type {
             EnemyType::Orange(_) => {
@@ -25,6 +24,10 @@ impl EnemyManeger {
             },
             EnemyType::Dummy => None
         }
+    }
+
+    pub fn get_hit_box(&self) -> HitBox {
+        self.get_move_data().get_hit_box()
     }
 }
 
@@ -67,6 +70,7 @@ impl OrangeEnemyData {
             if d.shoot_cooldown.is_none() 
                 && player_maneger.get_move_data().get_position().exist_in_direction(&position, angle)
                 && !game_maneger.collision_ray_hit_wall(&position, player_maneger.get_move_data().get_position()) {
+                println!("shot!");
                 d.shoot_cooldown = Some(OrangeEnemyData::SHOOT_COOLDOWN);
                 bullet_flag = true;
             }
@@ -76,7 +80,7 @@ impl OrangeEnemyData {
                 enemy_maneger.turn(TurnDirection::Right);
             }
             if bullet_flag {
-                res = Some(BulletManeger::shoot_maneger_bullet(enemy_maneger));
+                res = Some(BulletManeger::shoot_maneger_bullet(enemy_maneger, 2.0));
             }
         } else {
             warn!("WARN: Wrong enemy function is called.");

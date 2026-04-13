@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    game_maneger::{GameManeger, Key, KeyState}, 
+    game_maneger::{GameManeger, HitBox, Key, KeyState}, 
     move_maneger::{Gear, MoveData, MoveManeger, TurnDirection, bullet_maneger::BulletManeger} 
 };
 
@@ -38,10 +38,14 @@ impl PlayerManeger {
             flag = true;
         }
         if let KeyState::Pressing = game_maneger.controller_pressed(Key::Space) {
-            bullet = Some(BulletManeger::shoot_maneger_bullet(self));
+            bullet = Some(BulletManeger::shoot_maneger_bullet(self, 2.5));
             flag = true;
         }
         (flag, bullet)
+    }
+
+    pub fn get_hit_box(&self) -> HitBox {
+        self.get_move_data().get_hit_box()
     }
 }
 

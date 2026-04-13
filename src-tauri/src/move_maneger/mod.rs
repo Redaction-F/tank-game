@@ -17,7 +17,7 @@ pub use enemy_maneger::{EnemyManeger, EnemyTypeVariable};
 pub mod tauri_command {
     use crate::{
         game_maneger::GameManeger, 
-        move_maneger::{bullet_maneger::BulletManeger, enemy_maneger::EnemyManeger, player_maneger::PlayerManeger}
+        move_maneger::{bullet_maneger::{BulletManeger, HitTank}, enemy_maneger::EnemyManeger, player_maneger::PlayerManeger}
     };
 
     /// [[tauri command]]
@@ -32,6 +32,12 @@ pub mod tauri_command {
         (res.0, res.1, player_maneger, game_maneger)
     }
 
+    #[tauri::command]
+    pub fn enemy_move_auto(mut enemy_maneger: EnemyManeger, player_maneger: PlayerManeger, game_maneger: GameManeger) -> (Option<BulletManeger>, EnemyManeger) {
+        let res = enemy_maneger.move_auto(&player_maneger, &game_maneger);
+        (res, enemy_maneger)
+    }
+
     /// [[tauri command]]
     /// Move bullet. This function should be called constantly.
     /// * `bullet_maneger` - the bullet maneger
@@ -39,15 +45,9 @@ pub mod tauri_command {
     /// ## Return
     /// Whether bullet disappeared or not, updated `BulletManeger`.
     #[tauri::command]
-    pub fn bullet_move_forward(mut bullet_maneger: BulletManeger, game_maneger: GameManeger) -> (bool, BulletManeger) {
-        let res: bool = bullet_maneger.move_forward(&game_maneger);
-        (res, bullet_maneger)
-    }
-
-    #[tauri::command]
-    pub fn enemy_move_auto(mut enemy_maneger: EnemyManeger, player_maneger: PlayerManeger, game_maneger: GameManeger) -> (Option<BulletManeger>, EnemyManeger) {
-        let res: Option<BulletManeger> = enemy_maneger.move_auto(&player_maneger, &game_maneger);
-        (res, enemy_maneger)
+    pub fn bullet_move_forward(mut bullet_maneger: BulletManeger, game_maneger: GameManeger) -> (bool, HitTank, BulletManeger) {
+        let res: (bool, HitTank) = bullet_maneger.move_forward(&game_maneger);
+        (res.0, res.1, bullet_maneger)
     }
 }
 

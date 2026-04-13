@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { initObjectRenderingData, ObjectRenderingData, PlayerManeger } from "../player/logic";
+import { initObjectRenderingData, ObjectRenderingData } from "../player/logic";
 import { BulletManeger } from "../bullet/logic";
 import { EnemyManeger } from "./logic";
 import { GlobalProps } from "../../logic";
@@ -11,7 +11,6 @@ import Bullet from "../bullet";
 function Enemy(props: {
   startGrid: GridPosition,
   enemyManegerIndex: number,
-  playerManeger: PlayerManeger | null,
   globalProps: GlobalProps,
 }) {
   const [objectRenderingData, setObjectRenderingData] = useState<ObjectRenderingData>(initObjectRenderingData());
@@ -57,12 +56,9 @@ function Enemy(props: {
         y: props.startGrid.gridY * 32 - enemyManegers[props.enemyManegerIndex].moveData.size.height / 2,
       };
       intervalId.current = props.globalProps.addIntervalFunction(async () => {
-        if (props.playerManeger === null) {
-          return;
-        }
         const [bulletManegerRes, enemyRes] = await invoke<[BulletManeger | null, EnemyManeger]>("enemy_move_auto", { 
           enemyManeger: enemyManegers[props.enemyManegerIndex],
-          playerManeger: props.playerManeger,
+          playerManeger: props.globalProps.gameManeger.collisionManeger.playerManeger,
           gameManeger: props.globalProps.gameManeger
         });
         enemyManegers[props.enemyManegerIndex] = enemyRes;

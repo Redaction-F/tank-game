@@ -16,7 +16,7 @@ type BulletManeger = {
         count: number
       }
     },
-    speed: 2.5
+    speed: 4.0
   }
 };
 const initBulletManeger = (): BulletManeger => {
@@ -37,9 +37,13 @@ const initBulletManeger = (): BulletManeger => {
           count: 0
         }
       },
-      speed: 2.5,
+      speed: 4.0,
     },
   };
 };
 
-export { type BulletManeger, initBulletManeger }
+type HitTank = "player" | {
+  enemy: number
+} | "noHit";
+
+export { type BulletManeger, initBulletManeger, type HitTank }

@@ -10,13 +10,12 @@ import "./style.css";
 // プレイヤー
 function Player(props: {
   startGrid: GridPosition,
-  playerManeger: PlayerManeger,
   globalProps: GlobalProps,
 }) {
   // プレイヤーの位置と角度
   const [objectRenderingData, setObjectRenderingData] = useState<ObjectRenderingData>(initObjectRenderingData());
   const setPlayerManeger = (value: PlayerManeger) => {
-    props.playerManeger.moveData = value.moveData;
+    props.globalProps.gameManeger.collisionManeger.playerManeger.moveData = value.moveData;
   };
   // 砲弾管理オブジェクト群
   const maximumBullet: number = 2;
@@ -55,10 +54,10 @@ function Player(props: {
   useEffect(() => {
     const first = () => {
       const startPosition = {
-        x: props.startGrid.gridX * 32 - props.playerManeger.moveData.size.width / 2,
-        y: props.startGrid.gridY * 32 - props.playerManeger.moveData.size.height / 2,
+        x: props.startGrid.gridX * 32 - props.globalProps.gameManeger.collisionManeger.playerManeger.moveData.size.width / 2,
+        y: props.startGrid.gridY * 32 - props.globalProps.gameManeger.collisionManeger.playerManeger.moveData.size.height / 2,
       };
-      props.playerManeger.moveData.position = startPosition;
+      props.globalProps.gameManeger.collisionManeger.playerManeger.moveData.position = startPosition;
       setObjectRenderingData({
         position: startPosition,
         angle: 0
@@ -66,17 +65,15 @@ function Player(props: {
       // コントローラを定期的に読んで移動させる
       props.globalProps.addIntervalFunction(async (setGameManeger) => {
         // コントローラを読む
-        const [rendering, bulletManegerRes, playerManegerawaitRes, gameManegerRes] = 
+        const [rendering, bulletManegerRes, playerManegerRes, gameManegerRes] = 
           await invoke<[boolean, BulletManeger | null, PlayerManeger, GameManeger]>("player_move_by_controller", {
-            playerManeger: props.playerManeger, 
+            playerManeger: props.globalProps.gameManeger.collisionManeger.playerManeger, 
             gameManeger: props.globalProps.gameManeger
           });
         // 動いていないなら残りを飛ばす
         if (!rendering) {
           return;
         }
-        // プレイヤー管理オブジェクトを更新
-        setPlayerManeger(playerManegerawaitRes);
         // 砲弾が発射されていたら砲弾を作成
         if (bulletManegerRes !== null) {
           let nullIndex: number = 0;
@@ -92,13 +89,15 @@ function Player(props: {
           // スペースキーを押したときだけ更新される
           setGameManeger(gameManegerRes);
         }
+        // プレイヤー管理オブジェクトを更新
+        setPlayerManeger(playerManegerRes);
         // プレイヤーの位置を更新
         setObjectRenderingData({
           position: {
-            x: Math.floor(props.playerManeger.moveData.position.x),
-            y: Math.floor(props.playerManeger.moveData.position.y),
+            x: Math.floor(props.globalProps.gameManeger.collisionManeger.playerManeger.moveData.position.x),
+            y: Math.floor(props.globalProps.gameManeger.collisionManeger.playerManeger.moveData.position.y),
           },
-          angle: Math.floor(props.playerManeger.moveData.angle),
+          angle: Math.floor(props.globalProps.gameManeger.collisionManeger.playerManeger.moveData.angle),
         });
       });
     };
