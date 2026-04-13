@@ -5,6 +5,7 @@ import { initStageData, StageData } from "./logic";
 import StageAround from "./StageAround";
 import StageMain from "./StageMain";
 import "./style.css"
+import { initEnemyManeger } from "../enemy/logic";
 
 // ステージ
 function Stage(props: {
@@ -28,6 +29,7 @@ function Stage(props: {
       );
       setStageData(stageRes);
       props.setGameManeger(gameManegerRes);
+      props.globalProps.gameManeger.collisionManeger.enemyManegers = new Array(stageRes.enemys.length).fill(initEnemyManeger());
     };
     if (firstRendered.current) {
       return;

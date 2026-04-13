@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { GameManeger, GlobalProps } from "../../logic";
-import { initObjectRenderingData, initPlayerManeger, ObjectRenderingData, PlayerManeger } from "./logic"
+import { initObjectRenderingData, ObjectRenderingData, PlayerManeger } from "./logic"
 import { BulletManeger } from "../bullet/logic";
 import { GridPosition } from "../stage/logic";
 import Bullet from "../bullet";
@@ -10,14 +10,13 @@ import "./style.css";
 // プレイヤー
 function Player(props: {
   startGrid: GridPosition,
-  setPlayerManeger: (value: PlayerManeger) => void,
+  playerManeger: PlayerManeger,
   globalProps: GlobalProps,
 }) {
   // プレイヤーの位置と角度
   const [objectRenderingData, setObjectRenderingData] = useState<ObjectRenderingData>(initObjectRenderingData());
-  const playerManeger = useRef<PlayerManeger>(initPlayerManeger());
   const setPlayerManeger = (value: PlayerManeger) => {
-    playerManeger.current.moveData = value.moveData;
+    props.playerManeger.moveData = value.moveData;
   };
   // 砲弾管理オブジェクト群
   const maximumBullet: number = 2;
@@ -55,12 +54,11 @@ function Player(props: {
 
   useEffect(() => {
     const first = () => {
-      props.setPlayerManeger(playerManeger.current);
       const startPosition = {
-        x: props.startGrid.gridX * 32 - playerManeger.current.moveData.size.width / 2,
-        y: props.startGrid.gridY * 32 - playerManeger.current.moveData.size.height / 2,
+        x: props.startGrid.gridX * 32 - props.playerManeger.moveData.size.width / 2,
+        y: props.startGrid.gridY * 32 - props.playerManeger.moveData.size.height / 2,
       };
-      playerManeger.current.moveData.position = startPosition;
+      props.playerManeger.moveData.position = startPosition;
       setObjectRenderingData({
         position: startPosition,
         angle: 0
@@ -70,7 +68,7 @@ function Player(props: {
         // コントローラを読む
         const [rendering, bulletManegerRes, playerManegerawaitRes, gameManegerRes] = 
           await invoke<[boolean, BulletManeger | null, PlayerManeger, GameManeger]>("player_move_by_controller", {
-            playerManeger: playerManeger.current, 
+            playerManeger: props.playerManeger, 
             gameManeger: props.globalProps.gameManeger
           });
         // 動いていないなら残りを飛ばす
@@ -97,10 +95,10 @@ function Player(props: {
         // プレイヤーの位置を更新
         setObjectRenderingData({
           position: {
-            x: Math.floor(playerManeger.current.moveData.position.x),
-            y: Math.floor(playerManeger.current.moveData.position.y),
+            x: Math.floor(props.playerManeger.moveData.position.x),
+            y: Math.floor(props.playerManeger.moveData.position.y),
           },
-          angle: Math.floor(playerManeger.current.moveData.angle),
+          angle: Math.floor(props.playerManeger.moveData.angle),
         });
       });
     };
@@ -111,12 +109,8 @@ function Player(props: {
     first();
   }, []);
 
-  useEffect(() => {
-
-  }, [])
-
   return (
-    <>
+    <div>
       {
         bulletManegers
           .map((v, i) => {
@@ -141,7 +135,7 @@ function Player(props: {
         }} 
         src="./src/assets/img/tank.gif"
       />
-    </>
+    </div>
   )
 }
 

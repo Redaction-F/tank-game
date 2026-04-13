@@ -1,10 +1,10 @@
 use core::f64;
-use std::mem::swap;
 
 use serde::{Deserialize, Serialize};
 
 use crate::{
     general::{Position, Size}, 
+    move_maneger::{EnemyManeger, PlayerManeger}, 
     stage::{Grid, StageData}
 };
 
@@ -14,8 +14,12 @@ use crate::{
 pub struct CollisionManeger {
     #[serde(alias="_walls")]
     walls: Vec<HitBox>,
+    #[serde(alias="_playerManeger")]
+    player_maneger: PlayerManeger,
+    #[serde(alias="_enemyManegers")]
+    enemy_manegers: Vec<EnemyManeger>,
     #[serde(alias="_stageSize")]
-    stage_size: Size
+    stage_size: Size,
 }
 
 impl CollisionManeger {
@@ -23,7 +27,7 @@ impl CollisionManeger {
     /// * `stage` - a stage data
     pub fn update_stage(&mut self, stage: &StageData) {
         // update `walls`
-        let mut new_walls: Vec<HitBox> = stage
+        self.walls = stage
             .get_grid_map()
             .iter()
             .enumerate()
@@ -38,7 +42,6 @@ impl CollisionManeger {
                     }))
             .flatten()
             .collect::<Vec<HitBox>>();
-        swap(&mut self.walls, &mut new_walls);
         // update `stage_size`
         self.stage_size = Size::new( 
             HitBox::WALL_WIDTH * stage.get_grid_map().get(0).map(|v| v.len()).unwrap_or_default(),
@@ -98,7 +101,7 @@ impl CollisionManeger {
     }
 
     /// Check which direction `hit_box` hits walls from.
-    pub fn hit_wall(&self, hit_box: &HitBox) -> HitDirection {
+    pub fn object_hit_wall(&self, hit_box: &HitBox) -> HitDirection {
         // wall in stage
         let hit_stage_wall = self.walls
             .iter()
@@ -122,6 +125,42 @@ impl CollisionManeger {
             return HitDirection::Up
         }
         HitDirection::NoHit
+    }
+
+    pub fn ray_hit_wall(&self, ray_start: &Position, ray_end: &Position) -> bool {
+        let (start_point, end_point) = if ray_start.get_x() < ray_end.get_x() {
+            (ray_start, ray_end)
+        } else {
+            (ray_end, ray_start)
+        };
+        for v in self.walls.iter() {
+            let points: Vec<Position> = vec![
+                v.position.clone(),
+                &v.position + &Position::new(v.size.get_width() as f64, 0.0),
+                &v.position + &Position::new(v.size.get_width() as f64, v.size.get_height() as f64),
+                &v.position + &Position::new(0.0, v.size.get_height() as f64),
+            ];
+            let each_point_witch_side: Vec<bool> = points
+                .into_iter()
+                .filter_map(|v| {
+                    if (start_point.get_x() <= v.get_x()) && (v.get_x() <= end_point.get_x()) {
+                        Some((end_point.get_x() - start_point.get_x()) * (v.get_y() - start_point.get_y()) > (end_point.get_y() - start_point.get_y()) * (v.get_x() - start_point.get_x()))
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<bool>>();
+            if each_point_witch_side.is_empty() {
+                continue;
+            }
+            if each_point_witch_side
+                .iter()
+                .all(|&v| v == each_point_witch_side[0]) {
+                continue;
+            }
+            return true;
+        }
+        false
     }
 }
 

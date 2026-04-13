@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    game_maneger::{collision_maneger::CollisionManeger, controller::Controller},
-    stage::StageData,
+    game_maneger::{collision_maneger::CollisionManeger, controller::Controller}, general::Position, stage::StageData
 };
 
 pub use controller::{Key, KeyState};
@@ -56,8 +55,12 @@ impl GameManeger {
         self.collision_maneger.update_stage(stage);
     }
 
-    pub fn collision_hit_wall(&self, hit_box: &HitBox) -> HitDirection {
-        self.collision_maneger.hit_wall(hit_box)
+    pub fn collision_object_hit_wall(&self, hit_box: &HitBox) -> HitDirection {
+        self.collision_maneger.object_hit_wall(hit_box)
+    }
+
+    pub fn collision_ray_hit_wall(&self, ray_start: &Position, ray_end: &Position) -> bool {
+        self.collision_maneger.ray_hit_wall(ray_start, ray_end)
     }
 
     pub fn controller_pressed(&mut self, key: Key) -> KeyState {

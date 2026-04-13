@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Controller, GameManeger, initGameManeger, IntervalFunction } from "./logic";
+import { Controller, GameManeger, GlobalProps, initGameManeger, IntervalFunction } from "./logic";
 import Stage from "./components/stage";
 import "./style.css";
 
@@ -22,6 +22,10 @@ function App() {
   };
   // 初回のみ実行するためのフラグ
   const firstRendered = useRef<boolean>(false);
+  const globalProps: GlobalProps = {
+    gameManeger: gameManeger.current,
+    addIntervalFunction: addIntervalFunction
+  };
 
   useEffect(() => {
     // 初回のみ実行
@@ -48,10 +52,7 @@ function App() {
 
   return (
     <main className="container">
-      <Stage setGameManeger={setGameManeger} globalProps={{
-        gameManeger: gameManeger.current,
-        addIntervalFunction: addIntervalFunction
-      }} />
+      <Stage setGameManeger={setGameManeger} globalProps={globalProps} />
     </main>
   );
 }

@@ -1,10 +1,10 @@
-use log::{info, warn};
+use log::warn;
 use serde::{Deserialize, Serialize};
 
 use crate::{
     game_maneger::GameManeger, 
     general::Position, 
-    move_maneger::{MoveData, MoveManeger, TurnDirection, player_maneger::PlayerManeger}
+    move_maneger::{MoveData, MoveManeger, TurnDirection, bullet_maneger::BulletManeger, player_maneger::PlayerManeger}
 };
 
 #[derive(Serialize, Deserialize)]
@@ -18,12 +18,12 @@ pub struct EnemyManeger {
 
 impl EnemyManeger {
     #[allow(unused_variables)]
-    pub fn move_auto(&mut self, player_maneger: &PlayerManeger, game_maneger: &GameManeger) {
+    pub fn move_auto(&mut self, player_maneger: &PlayerManeger, game_maneger: &GameManeger) -> Option<BulletManeger> {
         match self.enemy_type {
             EnemyType::Orange(_) => {
-                OrangeEnemyData::move_auto(self, player_maneger);
+                OrangeEnemyData::move_auto(self, player_maneger, game_maneger)
             },
-            EnemyType::Dummy => ()
+            EnemyType::Dummy => None
         }
     }
 }
@@ -57,28 +57,31 @@ impl OrangeEnemyData {
     const SHOOT_COOLDOWN: usize = 300;
     const TURN_COOLDOWN: usize = 3;
 
-    fn move_auto(enemy_maneger: &mut EnemyManeger, player_maneger: &PlayerManeger) {
+    fn move_auto(enemy_maneger: &mut EnemyManeger, player_maneger: &PlayerManeger, game_maneger: &GameManeger) -> Option<BulletManeger> {
         let position: Position = enemy_maneger.get_move_data().get_position().clone();
         let angle: usize = enemy_maneger.get_move_data().get_angle();
+        let mut res: Option<BulletManeger> = None;
+        let mut bullet_flag: bool = false;
         if let EnemyType::Orange(d) = &mut enemy_maneger.enemy_type {
             d.shoot_cooldown = d.shoot_cooldown.and_then(|v| v.checked_sub(1));
             if d.shoot_cooldown.is_none() 
-                && player_maneger.get_move_data().get_position().exist_in_direction(
-                    &position, 
-                    angle
-                ) {
-                info!("shot!!");
+                && player_maneger.get_move_data().get_position().exist_in_direction(&position, angle)
+                && !game_maneger.collision_ray_hit_wall(&position, player_maneger.get_move_data().get_position()) {
                 d.shoot_cooldown = Some(OrangeEnemyData::SHOOT_COOLDOWN);
+                bullet_flag = true;
             }
-
             d.turn_cooldown = d.turn_cooldown.and_then(|v| v.checked_sub(1));
             if d.turn_cooldown.is_none() {
                 d.turn_cooldown = Some(OrangeEnemyData::TURN_COOLDOWN);
                 enemy_maneger.turn(TurnDirection::Right);
             }
+            if bullet_flag {
+                res = Some(BulletManeger::shoot_maneger_bullet(enemy_maneger));
+            }
         } else {
             warn!("WARN: Wrong enemy function is called.");
         };
+        res
     }
 }
 

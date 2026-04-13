@@ -1,4 +1,4 @@
-use std::f64::consts::PI;
+use std::{f64::consts::PI, ops::{Add, Sub}};
 
 use serde::{Deserialize, Serialize};
 
@@ -31,16 +31,68 @@ impl Position {
     pub fn get_y_mut(&mut self) -> &mut f64 {
         &mut self.y
     }
-    
+
     pub fn exist_in_direction(&self, base_position: &Position, angle: usize) -> bool {
-        let direction_angle_rad: f64 = f64::atan((self.get_y() - base_position.get_y()) / (self.get_x() - base_position.get_x()));
-        let direction_angle: f64 = if direction_angle_rad >= 0.0 {
-            direction_angle_rad / PI * 180.0
+        let direction_angle: f64 = if self.get_x() == base_position.get_x() {
+            if self.get_y() > base_position.get_y() {
+                90.0
+            } else {
+                270.0
+            }
         } else {
-            (direction_angle_rad + PI) / PI * 180.0
+            let mut rad: f64 = f64::atan((self.get_y() - base_position.get_y()) / (self.get_x() - base_position.get_x()));
+            if self.get_y() <= base_position.get_y() {
+                rad += PI
+            };
+            if rad >= 0.0 {
+                rad / PI * 180.0
+            } else {
+                (rad + PI) / PI * 180.0
+            }
         };
         let diff_angle: f64 =  (360.0 + (angle as f64) - direction_angle) % 360.0;
         return diff_angle <= 10.0 || 350.0 <= diff_angle;
+    }
+}
+
+impl Add for Position {
+    type Output = Position;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Position {
+            x: self.get_x() + rhs.get_x(),
+            y: self.get_y() + rhs.get_y(),
+        }
+    }
+}
+impl Add for &Position {
+    type Output = Position;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Position {
+            x: self.get_x() + rhs.get_x(),
+            y: self.get_y() + rhs.get_y(),
+        }
+    }
+}
+impl Sub for Position {
+    type Output = Position;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Position {
+            x: self.get_x() - rhs.get_x(),
+            y: self.get_y() - rhs.get_y(),
+        }
+    }
+}
+impl Sub for &Position {
+    type Output = Position;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Position {
+            x: self.get_x() - rhs.get_x(),
+            y: self.get_y() - rhs.get_y(),
+        }
     }
 }
 

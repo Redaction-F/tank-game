@@ -38,7 +38,7 @@ impl PlayerManeger {
             flag = true;
         }
         if let KeyState::Pressing = game_maneger.controller_pressed(Key::Space) {
-            bullet = Some(BulletManeger::player_maneger_bullet(&self));
+            bullet = Some(BulletManeger::shoot_maneger_bullet(self));
             flag = true;
         }
         (flag, bullet)

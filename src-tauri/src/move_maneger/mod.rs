@@ -9,14 +9,15 @@ use crate::{
 
 mod player_maneger;
 mod bullet_maneger;
-mod enemy;
+mod enemy_maneger;
 
-pub use enemy::EnemyTypeVariable;
+pub use player_maneger::PlayerManeger;
+pub use enemy_maneger::{EnemyManeger, EnemyTypeVariable};
 
 pub mod tauri_command {
     use crate::{
         game_maneger::GameManeger, 
-        move_maneger::{bullet_maneger::BulletManeger, enemy::EnemyManeger, player_maneger::PlayerManeger}
+        move_maneger::{bullet_maneger::BulletManeger, enemy_maneger::EnemyManeger, player_maneger::PlayerManeger}
     };
 
     /// [[tauri command]]
@@ -44,9 +45,9 @@ pub mod tauri_command {
     }
 
     #[tauri::command]
-    pub fn enemy_move_auto(mut enemy_maneger: EnemyManeger, player_maneger: PlayerManeger, game_maneger: GameManeger) -> EnemyManeger {
-        enemy_maneger.move_auto(&player_maneger, &game_maneger);
-        enemy_maneger
+    pub fn enemy_move_auto(mut enemy_maneger: EnemyManeger, player_maneger: PlayerManeger, game_maneger: GameManeger) -> (Option<BulletManeger>, EnemyManeger) {
+        let res: Option<BulletManeger> = enemy_maneger.move_auto(&player_maneger, &game_maneger);
+        (res, enemy_maneger)
     }
 }
 
@@ -139,7 +140,7 @@ trait MoveManeger {
         let move_data: &mut MoveData = self.get_move_data_mut();
         let pre_position: Position = move_data.get_position().clone();
         move_data.move_diff(d);
-        match (game_maneger.collision_hit_wall(&move_data.get_hit_box()), move_data.get_move_type_mut()) {
+        match (game_maneger.collision_object_hit_wall(&move_data.get_hit_box()), move_data.get_move_type_mut()) {
             (HitDirection::NoHit, _) => (),
             (_, MoveType::Hit) => *move_data.get_position_mut() = pre_position,
             (HitDirection::Right | HitDirection::Left, MoveType::Bounce(b)) => {

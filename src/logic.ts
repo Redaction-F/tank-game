@@ -1,4 +1,8 @@
 // 垂直下方向と水平右方向が正
+
+import { EnemyManeger } from "./components/enemy/logic";
+import { initPlayerManeger, PlayerManeger } from "./components/player/logic";
+
 // 位置
 type Position = {
   x: number,
@@ -31,6 +35,8 @@ const initGameManeger = (): GameManeger => {
     },
     collisionManeger: {
       walls: [],
+      playerManeger: initPlayerManeger(),
+      enemyManegers: [],
       stageSize: {
         width: 0,
         height: 0
@@ -49,6 +55,8 @@ type Controller = {
 
 type CollisionManeger = {
   walls: HitBox[],
+  playerManeger: PlayerManeger,
+  enemyManegers: EnemyManeger[],
   stageSize: Size
 };
 
@@ -58,7 +66,7 @@ type IntervalFunction = (setGameManeger: (gameManeger: GameManeger) => void) => 
 
 type GlobalProps = {
   gameManeger: GameManeger,
-  addIntervalFunction: (intervalFunction: IntervalFunction) => number,
+  addIntervalFunction: (intervalFunction: IntervalFunction) => number
 };
 
 export { type Controller, type CollisionManeger, type GameManeger, type GlobalProps, initGameManeger, type IntervalFunction, type Position, type Size }
