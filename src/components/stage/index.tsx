@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { GameManeger, GlobalProps } from "../../logic";
-import { initStageData, StageData } from "./logic";
+import { gridMapCol, gridMapRow, initStageData, StageData } from "./logic";
 import StageAround from "./StageAround";
 import StageMain from "./StageMain";
 import "./style.css"
@@ -9,6 +9,7 @@ import { initEnemyManeger } from "../enemy/logic";
 
 // ステージ
 function Stage(props: {
+  stageName: string,
   setGameManeger: (gameManeger: GameManeger) => void, 
   globalProps: GlobalProps,
 }) {
@@ -23,13 +24,13 @@ function Stage(props: {
       const [stageRes, gameManegerRes] = await invoke<[StageData, GameManeger]>(
         "load_stage", 
         { 
-          fileName: "stage.json", 
+          fileName: props.stageName, 
           gameManeger: props.globalProps.gameManeger 
         }
       );
       setStageData(stageRes);
       props.setGameManeger(gameManegerRes);
-      props.globalProps.gameManeger.collisionManeger.enemyManegers = new Array(stageRes.enemys.length).fill(initEnemyManeger());
+      props.globalProps.gameManeger.collisionManeger.enemyManegers = new Array(stageRes.enemys.length).fill(null).map(() => initEnemyManeger());
     };
     if (firstRendered.current) {
       return;
@@ -39,7 +40,13 @@ function Stage(props: {
   }, []);
 
   return (
-    <div className="stage">
+    <div 
+      className="stage"
+      style={{
+        width: `${(gridMapCol(stageData) + 2) * 32}px`,
+        height: `${(gridMapRow(stageData) + 2) * 32}px`
+      }}
+    >
       <StageAround 
         stageData={stageData} 
         key={stageData.stageId + 2000}

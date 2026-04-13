@@ -1,16 +1,12 @@
 use std::{error, fmt::Display};
 
-use serde::{Deserialize, Serialize, de::Visitor};
+use serde::Serialize;
 
 #[derive(Debug)]
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all="camelCase")]
 /// Error by this crate.
 /// For more infomation about error message, see `ErrorMsg`
 pub enum Error {
-    #[serde(alias="_iOError")]
     IOError(ErrorMsg),
-    #[serde(alias="_fileError")]
     FileError(ErrorMsg)
 }
 
@@ -47,6 +43,13 @@ impl Error {
             for_users: for_users.to_string()
         })
     }
+
+    fn to_user_string(&self) -> String {
+        match self {
+            Self::IOError(v) => format!("IOError({})", v.for_users),
+            Self::FileError(v) => format!("FileError({})", v.for_users),
+        }
+    }
 }
 
 // for `error::Error`
@@ -61,6 +64,14 @@ impl Display for Error {
 
 impl error::Error for Error {}
 
+impl Serialize for Error {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer {
+        serializer.serialize_str(self.to_user_string().as_str())
+    }
+}
+
 /// `Error` without message.
 pub enum ErrorVariant {
     IOError,
@@ -71,42 +82,4 @@ pub enum ErrorVariant {
 pub struct ErrorMsg {
     for_developers: String,
     for_users: String
-}
-
-// string -> ErrorMsg
-impl Serialize for ErrorMsg {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: serde::Serializer {
-        serializer.serialize_str(&self.for_users)
-    }
-}
-
-// ErrorMsg -> string
-// only message for user
-impl<'de> Deserialize<'de> for ErrorMsg {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: serde::Deserializer<'de> {
-        deserializer.deserialize_str(ErrorMsgVisitor)
-    }
-}
-
-struct ErrorMsgVisitor;
-
-impl<'de> Visitor<'de> for ErrorMsgVisitor {
-    type Value = ErrorMsg;
-    
-    fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "a string")
-    }
-
-    fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
-        where
-            E: serde::de::Error, {
-        Ok(Self::Value {
-            for_developers: String::default(),
-            for_users: v
-        })
-    }
 }

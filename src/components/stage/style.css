@@ -1,8 +1,7 @@
 /* ステージ全体 */
 .stage {
-  width: 832px;
-  height: 576px;
   border: 5px solid #404040;
+  margin: 0 auto;
   position: relative;
 }
 

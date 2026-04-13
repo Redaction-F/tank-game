@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Controller, GameManeger, GlobalProps, initGameManeger, IntervalFunction } from "./logic";
+import { Controller, GameManeger, GlobalProps, initGameManeger, IntervalFunction, Mode } from "./logic";
 import Stage from "./components/stage";
+import Menu from "./components/menu";
 import "./style.css";
 
 function App() {
@@ -25,6 +26,14 @@ function App() {
   const globalProps: GlobalProps = {
     gameManeger: gameManeger.current,
     addIntervalFunction: addIntervalFunction
+  };
+  const [mode, setMode] = useState<Mode>("select");
+  const stageStart = (stageName: string) => {
+    setMode({
+      game: {
+        stageName
+      }
+    });
   };
 
   useEffect(() => {
@@ -52,7 +61,17 @@ function App() {
 
   return (
     <main className="container">
-      <Stage setGameManeger={setGameManeger} globalProps={globalProps} />
+      {
+        mode === "select"
+        ? <Menu 
+            stageStart={stageStart}
+          />
+        : <Stage 
+            stageName={mode.game.stageName}
+            setGameManeger={setGameManeger} 
+            globalProps={globalProps} 
+          />
+      }
     </main>
   );
 }

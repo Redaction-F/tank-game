@@ -69,4 +69,10 @@ type GlobalProps = {
   addIntervalFunction: (intervalFunction: IntervalFunction) => number
 };
 
-export { type Controller, type CollisionManeger, type GameManeger, type GlobalProps, initGameManeger, type IntervalFunction, type Position, type Size }
+type Mode = "select" | {
+  game: {
+    stageName: string
+  }
+};
+
+export { type Controller, type CollisionManeger, type GameManeger, type GlobalProps, initGameManeger, type IntervalFunction, type Mode, type Position, type Size }

@@ -39,7 +39,7 @@ function StageMain(props: {
             startGrid={v.startGrid}
             enemyManegerIndex={i}
             globalProps={props.globalProps}
-            key={props.stage.stageId}
+            key={props.stage.stageId * 10 + i}
           />
         ))
       }
