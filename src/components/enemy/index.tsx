@@ -2,20 +2,17 @@ import { useEffect, useRef, useState } from "react";
 import { initObjectRenderingData, ObjectRenderingData } from "../player/logic";
 import { BulletManeger } from "../bullet/logic";
 import { EnemyManeger } from "./logic";
-import { GlobalProps } from "../../logic";
 import { invoke } from "@tauri-apps/api/core";
 import "./style.css";
-import { GridPosition } from "../stage/logic";
+import { GameProps, GridPosition } from "../game/logic";
 import Bullet from "../bullet";
 
 function Enemy(props: {
   startGrid: GridPosition,
   enemyManegerIndex: number,
-  globalProps: GlobalProps,
+  gameProps: GameProps,
 }) {
   const [objectRenderingData, setObjectRenderingData] = useState<ObjectRenderingData>(initObjectRenderingData());
-  const intervalId = useRef<number | null>(null);
-  const firstRendered = useRef<boolean>(false);
     // 砲弾管理オブジェクト群
   const maximumBullet: number = 2;
   const [bulletManegers, setBulletManegers] = useState<({
@@ -49,26 +46,20 @@ function Enemy(props: {
   };
 
   useEffect(() => {
-    const first = () => {
-      const enemyManegers = props.globalProps.gameManeger.collisionManeger.enemyManegers;
-      if (enemyManegers[props.enemyManegerIndex] === null) {
-        return;
-      }
-      enemyManegers[props.enemyManegerIndex]!.moveData.position = {
-        x: props.startGrid.gridX * 32 - enemyManegers[props.enemyManegerIndex]!.moveData.size.width / 2,
-        y: props.startGrid.gridY * 32 - enemyManegers[props.enemyManegerIndex]!.moveData.size.height / 2,
-      };
-      intervalId.current = props.globalProps.addIntervalFunction(async () => {
-        if (props.globalProps.gameManeger.collisionManeger.playerManeger === null || enemyManegers[props.enemyManegerIndex] === null) {
-          if (intervalId.current !== null) {
-            clearInterval(intervalId.current);
-          }
-          return;
-        }
+    const enemyManegers = props.gameProps.gameManeger.collisionManeger.enemyManegers;
+    if (enemyManegers[props.enemyManegerIndex] === null) {
+      return;
+    }
+    enemyManegers[props.enemyManegerIndex]!.moveData.position = {
+      x: props.startGrid.gridX * 32 - enemyManegers[props.enemyManegerIndex]!.moveData.size.width / 2,
+      y: props.startGrid.gridY * 32 - enemyManegers[props.enemyManegerIndex]!.moveData.size.height / 2,
+    };
+    const clearTask = props.gameProps.addTask({
+      f: async () => {
         const [bulletManegerRes, enemyRes] = await invoke<[BulletManeger | null, EnemyManeger]>("enemy_move_auto", { 
           enemyManeger: enemyManegers[props.enemyManegerIndex],
-          playerManeger: props.globalProps.gameManeger.collisionManeger.playerManeger,
-          gameManeger: props.globalProps.gameManeger
+          playerManeger: props.gameProps.gameManeger.collisionManeger.playerManeger,
+          gameManeger: props.gameProps.gameManeger
         });
         enemyManegers[props.enemyManegerIndex] = enemyRes;
         // 砲弾が発射されていたら砲弾を作成
@@ -91,13 +82,11 @@ function Enemy(props: {
           },
           angle: enemyManegers[props.enemyManegerIndex]!.moveData.angle
         });
-      });
-    };
-    if (firstRendered.current) {
-      return;
-    }
-    firstRendered.current = true;
-    first();
+      }, 
+      priority: 5, 
+      memo: "enemy move(5)"
+    });
+    return clearTask;
   }, []);
 
   return (
@@ -109,13 +98,13 @@ function Enemy(props: {
           : <Bullet 
               initBulletManeger={v.maneger}
               disappear={() => setBulletManegersWrapper(i, null)}
-              globalProps={props.globalProps}
+              gameProps={props.gameProps}
               key={v.id}
             />
         ))
       }
       {
-        props.globalProps.gameManeger.collisionManeger.enemyManegers[props.enemyManegerIndex] === null
+        props.gameProps.gameManeger.collisionManeger.enemyManegers[props.enemyManegerIndex] === null
         ? <></>
         : <img 
             className="enemy" 

@@ -9,8 +9,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             stage::tauri_command::load_stage,
-            game_maneger::tauri_command::check_keydown,
-            game_maneger::tauri_command::check_keyup,
+            game_maneger::tauri_command::controller_update,
             move_maneger::tauri_command::player_move_by_controller,
             move_maneger::tauri_command::bullet_move_forward,
             move_maneger::tauri_command::enemy_move_auto,

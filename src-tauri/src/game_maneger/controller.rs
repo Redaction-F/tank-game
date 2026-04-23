@@ -17,24 +17,46 @@ pub struct Controller {
 }
 
 impl Controller {
+    pub fn new() -> Self {
+        Self { 
+            right: KeyState::Waiting, 
+            left: KeyState::Waiting, 
+            down: KeyState::Waiting, 
+            up: KeyState::Waiting, 
+            space: KeyState::Waiting 
+        }
+    }
+
+    pub fn update(&mut self, keydown: Vec<String>, keyup: Vec<String>) {
+        if let KeyState::JustPressing = self.space {
+            self.space = KeyState::Pressing;
+        }
+        keydown.into_iter().for_each(|key| {
+            self.check_keydown(key);
+        });
+        keyup.into_iter().for_each(|key| {
+            self.check_keyup(key);
+        });
+    }
+
     /// Check keydown and get datas of necessary key. This function should be called when a key is pressed.
     /// * `key` - a pressed key
-    pub fn check_keydown(&mut self, key: String) {
+    fn check_keydown(&mut self, key: String) {
         match key.as_str() {
             "Right" | "ArrowRight" => {
-                self.right = KeyState::Pressing;
+                self.right = KeyState::JustPressing;
             },
             "Left" | "ArrowLeft" => {
-                self.left = KeyState::Pressing;
+                self.left = KeyState::JustPressing;
             },
             "Down" | "ArrowDown" => {
-                self.down = KeyState::Pressing;
+                self.down = KeyState::JustPressing;
             },
             "Up" | "ArrowUp" => {
-                self.up = KeyState::Pressing;
+                self.up = KeyState::JustPressing;
             },
             " " => {
-                self.space = KeyState::Pressing;
+                self.space = KeyState::JustPressing;
             }
             _ => ()
         }
@@ -42,7 +64,7 @@ impl Controller {
 
     /// Check keyup and get datas of necessary key. This function should be called when a key is released.
     /// * `key` - a released key
-    pub fn check_keyup(&mut self, key: String) {
+    fn check_keyup(&mut self, key: String) {
         match key.as_str() {
             "Right" | "ArrowRight" => {
                 self.right = KeyState::Waiting;
@@ -64,6 +86,8 @@ impl Controller {
     }
 
     /// Get key state.
+    /// * `key` - a key wanted to get
+    // TODO: remove mutable
     pub fn pressed(&mut self, key: Key) -> KeyState {
         match key {
             Key::Right => self.right.clone(),
@@ -72,9 +96,9 @@ impl Controller {
             Key::Up => self.up.clone(),
             // The information of pressing space key is returned once for a pressing.
             Key::Space => match &self.space {
-                KeyState::Pressing => {
-                    self.space = KeyState::Pressed;
-                    KeyState::Pressing
+                KeyState::JustPressing => {
+                    self.space = KeyState::Pressing;
+                    KeyState::JustPressing
                 },
                 v => v.clone()
             },
@@ -82,7 +106,7 @@ impl Controller {
     }
 }
 
-/// The kind of watched key.
+/// The kind of key.
 pub enum Key {
     Right,
     Left,
@@ -96,9 +120,9 @@ pub enum Key {
 /// The state of key.
 pub enum KeyState {
     /// Pressing now
-    Pressing,
+    JustPressing,
     /// Already pressed
-    Pressed,
+    Pressing,
     /// Not pressing
     Waiting
 }

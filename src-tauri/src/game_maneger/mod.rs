@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    game_maneger::{collision_maneger::CollisionManeger, controller::Controller}, general::Position, stage::StageData
+    game_maneger::{collision_maneger::CollisionManeger, controller::Controller}, 
+    general::Position, 
+    stage::StageData
 };
 
 pub use controller::{Key, KeyState};
@@ -11,32 +13,12 @@ mod controller;
 mod collision_maneger;
 
 pub mod tauri_command {
-    use crate::game_maneger::controller::Controller;
+    use crate::game_maneger::GameManeger;
 
-    /// [[tauri command]]
-    /// 
-    /// Check keydown and get datas of necessary key. This function should be called when a key is pressed.
-    /// * `controller` - the controller
-    /// * `key` - a pressed key
-    /// ## Return
-    /// Updated `controller`. 
     #[tauri::command]
-    pub fn check_keydown(mut controller: Controller, key: String) -> Controller {
-        controller.check_keydown(key);
-        controller
-    }
-
-    /// [[tauri command]]
-    /// 
-    /// Check keyup and get datas of necessary key. This function should be called when a key is released.
-    /// * `controller` - the controller
-    /// * `key` - a released key
-    /// ## Return
-    /// Updated `controller`. 
-    #[tauri::command]
-    pub fn check_keyup(mut controller: Controller, key: String) -> Controller {
-        controller.check_keyup(key);
-        controller
+    pub fn controller_update(mut game_maneger: GameManeger, keydown: Vec<String>, keyup: Vec<String>) -> GameManeger {
+        game_maneger.controller.update(keydown, keyup);
+        game_maneger
     }
 }
 
@@ -51,8 +33,11 @@ pub struct GameManeger {
 }
 
 impl GameManeger {
-    pub fn update_stage(&mut self, stage: &StageData) {
-        self.collision_maneger.update_stage(stage);
+    pub fn from_stage(stage: &StageData) -> Self {
+        Self { 
+            controller: Controller::new(), 
+            collision_maneger: CollisionManeger::from_stage(stage) 
+        }
     }
 
     pub fn collision_object_hit_wall(&self, hit_box: &HitBox) -> HitDirection {

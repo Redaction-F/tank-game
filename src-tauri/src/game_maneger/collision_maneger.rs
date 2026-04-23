@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     general::{Position, Size}, 
     move_maneger::{EnemyManeger, PlayerManeger}, 
-    stage::{Grid, StageData}
+    stage::{EnemyData, Grid, StageData}
 };
 
 #[derive(Serialize, Deserialize)]
@@ -17,36 +17,40 @@ pub struct CollisionManeger {
     #[serde(alias="_playerManeger")]
     player_maneger: PlayerManeger,
     #[serde(alias="_enemyManegers")]
-    enemy_manegers: Vec<Option<EnemyManeger>>,
+    enemy_manegers: Vec<EnemyManeger>,
     #[serde(alias="_stageSize")]
     stage_size: Size,
 }
 
 impl CollisionManeger {
-    /// Update a stage data. This function should be called when updating a stage.
-    /// * `stage` - a stage data
-    pub fn update_stage(&mut self, stage: &StageData) {
-        // update `walls`
-        self.walls = stage
-            .get_grid_map()
+    pub fn from_stage(stage: &StageData) -> CollisionManeger {
+        let mut walls = Vec::new();
+        for (i, row) in stage.get_grid_map().iter().enumerate() {
+            for (j, v) in row.iter().enumerate() {
+                match v {
+                    Grid::Wall | Grid::CrackedWall => {
+                        walls.push(HitBox::wall((j, i)));
+                    }, 
+                    _ => ()
+                }
+            }
+        }
+        let player_maneger: PlayerManeger = PlayerManeger::new(stage.start_grid().clone());
+        let enemy_manegers: Vec<EnemyManeger> = stage
+            .enemys()
             .iter()
-            .enumerate()
-            .map(|(i, row)| 
-                row
-                    .iter()
-                    .enumerate()
-                    .filter_map(move |(j, v)| match v {
-                        // if this is wall, get a position based grid
-                        Grid::Wall | Grid::CrackedWall => Some(HitBox::wall((j, i))),
-                        _ => None
-                    }))
-            .flatten()
-            .collect::<Vec<HitBox>>();
-        // update `stage_size`
-        self.stage_size = Size::new( 
+            .map(|v| <EnemyManeger as From<&EnemyData>>::from(v))
+            .collect::<Vec<EnemyManeger>>();
+        let stage_size: Size = Size::new( 
             HitBox::WALL_WIDTH * stage.get_grid_map().get(0).map(|v| v.len()).unwrap_or_default(),
             HitBox::WALL_HEIGHT * stage.get_grid_map().len(), 
         );
+        Self { 
+            walls, 
+            player_maneger, 
+            enemy_manegers, 
+            stage_size 
+        }
     }
 
     /// Check which direction `a` hits `b` from.
@@ -175,13 +179,9 @@ impl CollisionManeger {
             .iter()
             .enumerate()
             .find_map(|(i, v)| {
-                if let Some(v) = v {
-                    match CollisionManeger::hit(hit_box, &v.get_hit_box()) {
-                        HitDirection::NoHit => None,
-                        _ => Some(i)
-                    }
-                } else {
-                    None
+                match CollisionManeger::hit(hit_box, &v.get_hit_box()) {
+                    HitDirection::NoHit => None,
+                    _ => Some(i)
                 }
             })
     }

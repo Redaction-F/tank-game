@@ -1,12 +1,16 @@
 use serde::{Deserialize, Serialize};
 
-use crate::move_maneger::EnemyTypeVariable;
+use crate::{general::Position, move_maneger::EnemyTypeVariable};
 
 pub mod tauri_command {
     use std::fs;
     use log::error;
 
-    use crate::{game_maneger::GameManeger, general::{Error, ErrorVariant}, stage::StageData};
+    use crate::{
+        game_maneger::GameManeger, 
+        general::{Error, ErrorVariant}, 
+        stage::StageData
+    };
 
     /// [[tauri command]]
     /// 
@@ -14,9 +18,9 @@ pub mod tauri_command {
     /// * `file_name` - a name of file which have stage data
     /// * `game_maneger` - the game maneger
     /// ## Return
-    /// Leaded `StageData` and updated `game_maneger`. If failed, return "Err(Error)".
+    /// Leaded `StageData` and updated `game_maneger`. If failed, return `Err(Error)`.
     #[tauri::command]
-    pub fn load_stage(file_name: String, mut game_maneger: GameManeger) -> Result<(StageData, GameManeger), Error> {
+    pub fn load_stage(file_name: String) -> Result<(StageData, GameManeger), Error> {
         let path_name: String = format!("./resourse/stage/stage_{}.json", file_name);
         let f: String = fs::read_to_string(path_name)
             .map_err(|e| {
@@ -40,7 +44,7 @@ pub mod tauri_command {
                 error!("{}", e);
                 e
             })?;
-        game_maneger.update_stage(&stage);
+        let game_maneger: GameManeger = GameManeger::from_stage(&stage);
         Ok((stage, game_maneger))
     }
 }
@@ -64,6 +68,12 @@ impl StageData {
     pub fn get_grid_map(&self) -> &GridMap {
         &self.grid_map
     }
+    pub fn start_grid(&self) -> &GridPosition {
+        &self.start_grid
+    }
+    pub fn enemys(&self) -> &Vec<EnemyData> {
+        &self.enemys
+    }
 }
 
 pub type GridMap = Vec<Vec<Grid>>;
@@ -83,10 +93,11 @@ pub enum Grid {
     CrackedWall
 }
 
+#[derive(Clone)]
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 /// A stage position based grid.
-struct GridPosition {
+pub struct GridPosition {
     // snake_case alias for json
     #[serde(alias = "grid_x", alias = "_gridX")]
     grid_x: f64,
@@ -95,11 +106,30 @@ struct GridPosition {
     grid_y: f64
 }
 
+impl Into<Position> for GridPosition {
+    fn into(self) -> Position {
+        Position::new(
+            32.0 * self.grid_x, 
+            32.0 * self.grid_y
+        )
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
-struct EnemyData {
+pub struct EnemyData {
     #[serde(alias="enemy_type", alias="_kind")]
     enemy_type: EnemyTypeVariable,
     #[serde(alias="start_grid", alias="_startGrid")]
     start_grid: GridPosition
+}
+
+impl EnemyData {
+    pub fn get_enemy_type(&self) -> &EnemyTypeVariable {
+        &self.enemy_type
+    }
+
+    pub fn get_start_grid(&self) -> &GridPosition {
+        &self.start_grid
+    }
 }

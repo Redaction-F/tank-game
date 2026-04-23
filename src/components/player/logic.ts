@@ -1,4 +1,4 @@
-import { Position } from "../../logic";
+import { Position } from "../game/logic";
 
 type PlayerManeger = {
   moveData: {
@@ -12,7 +12,8 @@ type PlayerManeger = {
     },
     moveType: "hit",
     speed: 2.0
-  }
+  },
+  isDead: boolean
 };
 const initPlayerManeger = (): PlayerManeger => {
   return {
@@ -28,7 +29,8 @@ const initPlayerManeger = (): PlayerManeger => {
       },
       moveType: "hit",
       speed: 2.0
-    }
+    },
+    isDead: false
   };
 };
 

@@ -1,33 +1,33 @@
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { GameManeger, GlobalProps } from "../../logic";
 import { initObjectRenderingData, ObjectRenderingData, PlayerManeger } from "./logic"
 import { BulletManeger } from "../bullet/logic";
-import { GridPosition } from "../stage/logic";
+import { GameManeger, GameProps, GridPosition, Phase } from "../game/logic";
 import Bullet from "../bullet";
 import "./style.css";
 
 // プレイヤー
 function Player(props: {
   startGrid: GridPosition,
-  globalProps: GlobalProps,
+  gameProps: GameProps,
 }) {
   // プレイヤーの位置と角度
   const [objectRenderingData, setObjectRenderingData] = useState<ObjectRenderingData>(initObjectRenderingData());
   const setPlayerManeger = (value: PlayerManeger) => {
-    if (props.globalProps.gameManeger.collisionManeger.playerManeger === null) {
-      return;
-    }
-    props.globalProps.gameManeger.collisionManeger.playerManeger.moveData = value.moveData;
+    props.gameProps.gameManeger.collisionManeger.playerManeger.moveData = value.moveData;
+    props.gameProps.gameManeger.collisionManeger.playerManeger.isDead = value.isDead;
   };
-  // 砲弾管理オブジェクト群
+  // 砲弾最大数
   const maximumBullet: number = 2;
+  // 砲弾管理データ群
   const [bulletManegers, setBulletManegers] = useState<({
     id: number,
     maneger: BulletManeger,
   } | null)[]>(new Array(maximumBullet).fill(null));
+  // 砲弾が存在するかのフラグ(すぐに更新するためにuseRefで別に持つ)
   const bulletFlag = useRef<boolean[]>(new Array(maximumBullet).fill(false));
-  const setBulletManegersWrapper = (index: number, bulletManeger: BulletManeger | null) => {
+  // 砲弾を発射する
+  const shootBullet = (index: number, bulletManeger: BulletManeger | null) => {
     let newObject = null;
     if (bulletManeger !== null) {
       newObject = {
@@ -51,38 +51,27 @@ function Player(props: {
     nextBulletId.current %= 100;
     return res;
   };
-  // 初回のみ実行するためのフラグ
-  const firstRendered = useRef<boolean>(false);
 
   useEffect(() => {
-    const first = () => {
-      if (props.globalProps.gameManeger.collisionManeger.playerManeger === null) {
-        return;
-      }
-      const startPosition = {
-        x: props.startGrid.gridX * 32 - props.globalProps.gameManeger.collisionManeger.playerManeger.moveData.size.width / 2,
-        y: props.startGrid.gridY * 32 - props.globalProps.gameManeger.collisionManeger.playerManeger.moveData.size.height / 2,
-      };
-      props.globalProps.gameManeger.collisionManeger.playerManeger.moveData.position = startPosition;
-      setObjectRenderingData({
-        position: startPosition,
-        angle: 0
-      });
-      // コントローラを定期的に読んで移動させる
-      props.globalProps.addIntervalFunction(async (setGameManeger) => {
-        if (props.globalProps.gameManeger.collisionManeger.playerManeger === null) {
-          return;
-        }
+    // 初期位置を決定
+    const startPosition = {
+      x: props.startGrid.gridX * 32 - props.gameProps.gameManeger.collisionManeger.playerManeger.moveData.size.width / 2,
+      y: props.startGrid.gridY * 32 - props.gameProps.gameManeger.collisionManeger.playerManeger.moveData.size.height / 2,
+    };
+    props.gameProps.gameManeger.collisionManeger.playerManeger.moveData.position = startPosition;
+    setObjectRenderingData({
+      position: startPosition,
+      angle: 0
+    });
+    // コントローラを定期的に読んで移動させる
+    const clearTask = props.gameProps.addTask({
+      f: async () => {
         // コントローラを読む
         const [rendering, bulletManegerRes, playerManegerRes, gameManegerRes] = 
           await invoke<[boolean, BulletManeger | null, PlayerManeger, GameManeger]>("player_move_by_controller", {
-            playerManeger: props.globalProps.gameManeger.collisionManeger.playerManeger, 
-            gameManeger: props.globalProps.gameManeger
+            playerManeger: props.gameProps.gameManeger.collisionManeger.playerManeger, 
+            gameManeger: props.gameProps.gameManeger
           });
-        // 動いていないなら残りを飛ばす
-        if (!rendering) {
-          return;
-        }
         // 砲弾が発射されていたら砲弾を作成
         if (bulletManegerRes !== null) {
           let nullIndex: number = 0;
@@ -93,28 +82,28 @@ function Player(props: {
             nullIndex += 1;
           }
           if (nullIndex < bulletManegers.length) {
-            setBulletManegersWrapper(nullIndex, bulletManegerRes);
+            shootBullet(nullIndex, bulletManegerRes);
           }
-          // スペースキーを押したときだけ更新される
-          setGameManeger(gameManegerRes);
+        }
+        // 動いていないなら残りを飛ばす
+        if (!rendering) {
+          return;
         }
         // プレイヤー管理オブジェクトを更新
         setPlayerManeger(playerManegerRes);
         // プレイヤーの位置を更新
         setObjectRenderingData({
           position: {
-            x: Math.floor(props.globalProps.gameManeger.collisionManeger.playerManeger.moveData.position.x),
-            y: Math.floor(props.globalProps.gameManeger.collisionManeger.playerManeger.moveData.position.y),
+            x: playerManegerRes.moveData.position.x,
+            y: playerManegerRes.moveData.position.y,
           },
-          angle: Math.floor(props.globalProps.gameManeger.collisionManeger.playerManeger.moveData.angle),
+          angle: playerManegerRes.moveData.angle,
         });
-      });
-    };
-    if (firstRendered.current) {
-      return;
-    }
-    firstRendered.current = true;
-    first();
+      }, 
+      priority: Phase.Update2, 
+      memo: "player move(5)"
+    });
+    return clearTask;
   }, []);
 
   return (
@@ -127,8 +116,8 @@ function Player(props: {
             } else {
               return <Bullet 
                 initBulletManeger={v.maneger} 
-                disappear={() => setBulletManegersWrapper(i, null)}
-                globalProps={props.globalProps}
+                disappear={() => shootBullet(i, null)}
+                gameProps={props.gameProps}
                 key={v.id}
               />
             }
