@@ -1,46 +1,55 @@
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { GameManeger, GlobalProps } from "../../logic";
-import { initObjectRenderingData, ObjectRenderingData, PlayerManeger } from "./logic"
-import { BulletManeger } from "../bullet/logic";
-import { GridPosition } from "../stage/logic";
+import { initObjectRenderingData, ObjectRenderingData, PlayerManager } from "./logic"
+import { BulletManager } from "../bullet/logic";
+import { GameProps, GridPosition, Phase } from "../game/logic";
 import Bullet from "../bullet";
 import "./style.css";
 
 // プレイヤー
 function Player(props: {
   startGrid: GridPosition,
-  globalProps: GlobalProps,
+  gameProps: GameProps,
 }) {
   // プレイヤーの位置と角度
   const [objectRenderingData, setObjectRenderingData] = useState<ObjectRenderingData>(initObjectRenderingData());
-  const setPlayerManeger = (value: PlayerManeger) => {
-    if (props.globalProps.gameManeger.collisionManeger.playerManeger === null) {
-      return;
-    }
-    props.globalProps.gameManeger.collisionManeger.playerManeger.moveData = value.moveData;
+  const setPlayerManager = (value: PlayerManager) => {
+    props.gameProps.setGameManagerMap((v) => {
+      v.collisionManager.playerManager.moveData = value.moveData;
+      v.collisionManager.playerManager.isDead = value.isDead;
+    });
+    setObjectRenderingData({
+      position: {
+        x: value.moveData.position.x,
+        y: value.moveData.position.y
+      },
+      angle: value.moveData.angle
+    });
   };
-  // 砲弾管理オブジェクト群
+  // 砲弾最大数
   const maximumBullet: number = 2;
-  const [bulletManegers, setBulletManegers] = useState<({
+  // 砲弾管理データ群
+  const [bulletManagers, setBulletManagers] = useState<({
     id: number,
-    maneger: BulletManeger,
+    manager: BulletManager,
   } | null)[]>(new Array(maximumBullet).fill(null));
+  // 砲弾が存在するかのフラグ(すぐに更新するためにuseRefで別に持つ)
   const bulletFlag = useRef<boolean[]>(new Array(maximumBullet).fill(false));
-  const setBulletManegersWrapper = (index: number, bulletManeger: BulletManeger | null) => {
+  // 砲弾を発射する
+  const shootBullet = (index: number, bulletManager: BulletManager | null) => {
     let newObject = null;
-    if (bulletManeger !== null) {
+    if (bulletManager !== null) {
       newObject = {
         id: getNextBulletId(),
-        maneger: bulletManeger
+        manager: bulletManager
       }
     };
-    setBulletManegers((pre) => {
+    setBulletManagers((pre) => {
       const res = [...pre];
       res[index] = newObject;
       return res;
     });
-    bulletFlag.current[index] = (bulletManeger !== null);
+    bulletFlag.current[index] = (bulletManager !== null);
   };
   // 次の砲弾id
   const nextBulletId = useRef<number>(0);
@@ -51,40 +60,29 @@ function Player(props: {
     nextBulletId.current %= 100;
     return res;
   };
-  // 初回のみ実行するためのフラグ
-  const firstRendered = useRef<boolean>(false);
 
   useEffect(() => {
-    const first = () => {
-      if (props.globalProps.gameManeger.collisionManeger.playerManeger === null) {
-        return;
-      }
-      const startPosition = {
-        x: props.startGrid.gridX * 32 - props.globalProps.gameManeger.collisionManeger.playerManeger.moveData.size.width / 2,
-        y: props.startGrid.gridY * 32 - props.globalProps.gameManeger.collisionManeger.playerManeger.moveData.size.height / 2,
-      };
-      props.globalProps.gameManeger.collisionManeger.playerManeger.moveData.position = startPosition;
-      setObjectRenderingData({
-        position: startPosition,
-        angle: 0
-      });
-      // コントローラを定期的に読んで移動させる
-      props.globalProps.addIntervalFunction(async (setGameManeger) => {
-        if (props.globalProps.gameManeger.collisionManeger.playerManeger === null) {
-          return;
-        }
+    // 初期位置を決定
+    const startPosition = {
+      x: props.startGrid.gridX * 32 - props.gameProps.gameManager.collisionManager.playerManager.moveData.size.width / 2,
+      y: props.startGrid.gridY * 32 - props.gameProps.gameManager.collisionManager.playerManager.moveData.size.height / 2,
+    };
+    props.gameProps.setGameManagerMap((v) => v.collisionManager.playerManager.moveData.position = startPosition);
+    setObjectRenderingData({
+      position: startPosition,
+      angle: 0
+    });
+    // コントローラを定期的に読んで移動させる
+    const clearTask = props.gameProps.addTask({
+      f: async () => {
         // コントローラを読む
-        const [rendering, bulletManegerRes, playerManegerRes, gameManegerRes] = 
-          await invoke<[boolean, BulletManeger | null, PlayerManeger, GameManeger]>("player_move_by_controller", {
-            playerManeger: props.globalProps.gameManeger.collisionManeger.playerManeger, 
-            gameManeger: props.globalProps.gameManeger
+        const [rendering, bulletManagerRes, playerManagerRes] = 
+          await invoke<[boolean, BulletManager | null, PlayerManager]>("player_move_by_controller", {
+            playerManager: props.gameProps.gameManager.collisionManager.playerManager, 
+            gameManager: props.gameProps.gameManager
           });
-        // 動いていないなら残りを飛ばす
-        if (!rendering) {
-          return;
-        }
         // 砲弾が発射されていたら砲弾を作成
-        if (bulletManegerRes !== null) {
+        if (bulletManagerRes !== null) {
           let nullIndex: number = 0;
           for (const v of bulletFlag.current) {
             if (!v) {
@@ -92,43 +90,35 @@ function Player(props: {
             }
             nullIndex += 1;
           }
-          if (nullIndex < bulletManegers.length) {
-            setBulletManegersWrapper(nullIndex, bulletManegerRes);
+          if (nullIndex < bulletManagers.length) {
+            shootBullet(nullIndex, bulletManagerRes);
           }
-          // スペースキーを押したときだけ更新される
-          setGameManeger(gameManegerRes);
+        }
+        // 動いていないなら残りを飛ばす
+        if (!rendering) {
+          return;
         }
         // プレイヤー管理オブジェクトを更新
-        setPlayerManeger(playerManegerRes);
-        // プレイヤーの位置を更新
-        setObjectRenderingData({
-          position: {
-            x: Math.floor(props.globalProps.gameManeger.collisionManeger.playerManeger.moveData.position.x),
-            y: Math.floor(props.globalProps.gameManeger.collisionManeger.playerManeger.moveData.position.y),
-          },
-          angle: Math.floor(props.globalProps.gameManeger.collisionManeger.playerManeger.moveData.angle),
-        });
-      });
-    };
-    if (firstRendered.current) {
-      return;
-    }
-    firstRendered.current = true;
-    first();
+        setPlayerManager(playerManagerRes);
+      }, 
+      priority: Phase.Update2, 
+      memo: "player move(5)"
+    });
+    return clearTask;
   }, []);
 
   return (
     <div>
       {
-        bulletManegers
+        bulletManagers
           .map((v, i) => {
             if (v === null) {
               return <div key={100 + i}></div>
             } else {
               return <Bullet 
-                initBulletManeger={v.maneger} 
-                disappear={() => setBulletManegersWrapper(i, null)}
-                globalProps={props.globalProps}
+                initBulletManager={v.manager} 
+                disappear={() => shootBullet(i, null)}
+                gameProps={props.gameProps}
                 key={v.id}
               />
             }

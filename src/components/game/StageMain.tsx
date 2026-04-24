@@ -1,12 +1,11 @@
-import { GlobalProps } from "../../logic";
-import { StageData } from "./logic";
+import { GameProps, StageData } from "./logic";
 import Player from "../player";
 import Enemy from "../enemy";
 
 // ステージのメイン部分
 function StageMain(props: {
   stage: StageData,
-  globalProps: GlobalProps,
+  gameProps: GameProps,
 }) {
   return (
     <div className="grid-main">
@@ -31,14 +30,14 @@ function StageMain(props: {
       {/* プレイヤー */}
       <Player 
         startGrid={props.stage.startGrid}
-        globalProps={props.globalProps}
+        gameProps={props.gameProps}
       />
       {
         props.stage.enemys.map((v, i) => (
           <Enemy
             startGrid={v.startGrid}
-            enemyManegerIndex={i}
-            globalProps={props.globalProps}
+            enemyManagerIndex={i}
+            gameProps={props.gameProps}
             key={props.stage.stageId * 10 + i}
           />
         ))

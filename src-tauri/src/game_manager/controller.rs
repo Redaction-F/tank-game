@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
 /// Controller system. This manege user input.
-pub struct Controller {
+pub(super) struct Controller {
     #[serde(alias="_right")]
     right: KeyState,
     #[serde(alias="_left")]
@@ -17,9 +17,33 @@ pub struct Controller {
 }
 
 impl Controller {
-    /// Check keydown and get datas of necessary key. This function should be called when a key is pressed.
+    pub(super) fn new() -> Self {
+        Self { 
+            right: KeyState::Waiting, 
+            left: KeyState::Waiting, 
+            down: KeyState::Waiting, 
+            up: KeyState::Waiting, 
+            space: KeyState::Waiting 
+        }
+    }
+
+    /// Read keys which are pressed or released and update controller. This function should be called constantly.
+    pub(super) fn update(&mut self, keydown: Vec<String>, keyup: Vec<String>) {
+        // if space key is `JustPressing`, change `Pressing`
+        if let KeyState::JustPressing = self.space {
+            self.space = KeyState::Pressing;
+        }
+        keydown.into_iter().for_each(|key| {
+            self.check_keydown(key);
+        });
+        keyup.into_iter().for_each(|key| {
+            self.check_keyup(key);
+        });
+    }
+
+    /// Check keydown and get datas of necessary key.
     /// * `key` - a pressed key
-    pub fn check_keydown(&mut self, key: String) {
+    fn check_keydown(&mut self, key: String) {
         match key.as_str() {
             "Right" | "ArrowRight" => {
                 self.right = KeyState::Pressing;
@@ -33,16 +57,17 @@ impl Controller {
             "Up" | "ArrowUp" => {
                 self.up = KeyState::Pressing;
             },
-            " " => {
-                self.space = KeyState::Pressing;
+            // if space key is `Pressing`, do nothing
+            " " => if let KeyState::Waiting = self.space {
+                self.space = KeyState::JustPressing;
             }
             _ => ()
         }
     }
 
-    /// Check keyup and get datas of necessary key. This function should be called when a key is released.
+    /// Check keyup and get datas of necessary key.
     /// * `key` - a released key
-    pub fn check_keyup(&mut self, key: String) {
+    fn check_keyup(&mut self, key: String) {
         match key.as_str() {
             "Right" | "ArrowRight" => {
                 self.right = KeyState::Waiting;
@@ -64,25 +89,20 @@ impl Controller {
     }
 
     /// Get key state.
-    pub fn pressed(&mut self, key: Key) -> KeyState {
+    /// * `key` - a key wanted to get
+    pub(super) fn key_state(&self, key: Key) -> KeyState {
         match key {
             Key::Right => self.right.clone(),
             Key::Left => self.left.clone(),
             Key::Down => self.down.clone(),
             Key::Up => self.up.clone(),
             // The information of pressing space key is returned once for a pressing.
-            Key::Space => match &self.space {
-                KeyState::Pressing => {
-                    self.space = KeyState::Pressed;
-                    KeyState::Pressing
-                },
-                v => v.clone()
-            },
+            Key::Space => self.space.clone()
         }
     }
 }
 
-/// The kind of watched key.
+/// The kind of key.
 pub enum Key {
     Right,
     Left,
@@ -95,10 +115,10 @@ pub enum Key {
 #[serde(rename_all="camelCase")]
 /// The state of key.
 pub enum KeyState {
-    /// Pressing now
+    /// Starting to press now
+    JustPressing,
+    /// Pressing
     Pressing,
-    /// Already pressed
-    Pressed,
     /// Not pressing
     Waiting
 }

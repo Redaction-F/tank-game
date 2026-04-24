@@ -3,7 +3,7 @@ import "./style.css";
 
 function Result(props: {
   result: ResultKind,
-  backToSelect: () => void
+  switchToMenu: () => void
 }) {
   return (
     <div className="result-wrapper">
@@ -16,7 +16,7 @@ function Result(props: {
       </div>
       <button 
         className="result-button"
-        onClick={props.backToSelect}
+        onClick={props.switchToMenu}
       >Top</button>
     </div>
   );

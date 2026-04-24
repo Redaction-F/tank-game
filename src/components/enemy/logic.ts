@@ -1,6 +1,6 @@
-import { Position } from "../../logic"
+import { Position } from "../game/logic";
 
-type EnemyManeger = {
+type EnemyManager = {
   moveData: {
     // 位置
     position: Position,
@@ -13,32 +13,8 @@ type EnemyManeger = {
     moveType: "hit",
     speed: number
   },
-  enemyType: EnemyType
-};
-const initEnemyManeger = (): EnemyManeger => {
-  return {
-    moveData: {
-      // 位置
-      position: {
-        x: 0,
-        y: 0
-      },
-      // 角度
-      angle: 0,
-      size: {
-        width: 32,
-        height: 24,
-      },
-      moveType: "hit",
-      speed: 0.0
-    },
-    enemyType: {
-      orange: {
-        shootCooldown: null,
-        turnCooldown: null
-      }
-    }
-  };
+  enemyType: EnemyType,
+  isDead: boolean,
 };
 
 type EnemyType = {
@@ -48,4 +24,4 @@ type EnemyType = {
   }
 };
 
-export { type EnemyManeger, initEnemyManeger };
+export { type EnemyManager };

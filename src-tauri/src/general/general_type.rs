@@ -2,12 +2,12 @@ use std::{f64::consts::PI, ops::{Add, Sub}};
 
 use serde::{Deserialize, Serialize};
 
-/// 2D position.
-/// The y axis points downward adn the x axis points to the right.
-/// This has the `x` and `y` as `f64`.
 #[derive(Clone, Debug)]
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
+/// 2D position.
+/// The y axis points downward adn the x axis points to the right.
+/// This has the `x` and `y` as `f64`.
 pub struct Position {
     #[serde(alias="_x")]
     x: f64,
@@ -96,11 +96,11 @@ impl Sub for &Position {
     }
 }
 
-/// 2D size.
-/// This has the `width` and `height` as `usize`.
 #[derive(Clone, Debug)]
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
+/// 2D size.
+/// This has the `width` and `height` as `usize`.
 pub struct Size {
     #[serde(alias="_width")]
     width: usize,

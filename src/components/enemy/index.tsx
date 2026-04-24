@@ -1,42 +1,39 @@
 import { useEffect, useRef, useState } from "react";
 import { initObjectRenderingData, ObjectRenderingData } from "../player/logic";
-import { BulletManeger } from "../bullet/logic";
-import { EnemyManeger } from "./logic";
-import { GlobalProps } from "../../logic";
+import { BulletManager } from "../bullet/logic";
+import { EnemyManager } from "./logic";
 import { invoke } from "@tauri-apps/api/core";
 import "./style.css";
-import { GridPosition } from "../stage/logic";
+import { GameProps, GridPosition } from "../game/logic";
 import Bullet from "../bullet";
 
 function Enemy(props: {
   startGrid: GridPosition,
-  enemyManegerIndex: number,
-  globalProps: GlobalProps,
+  enemyManagerIndex: number,
+  gameProps: GameProps,
 }) {
   const [objectRenderingData, setObjectRenderingData] = useState<ObjectRenderingData>(initObjectRenderingData());
-  const intervalId = useRef<number | null>(null);
-  const firstRendered = useRef<boolean>(false);
     // 砲弾管理オブジェクト群
   const maximumBullet: number = 2;
-  const [bulletManegers, setBulletManegers] = useState<({
+  const [bulletManagers, setBulletManagers] = useState<({
     id: number,
-    maneger: BulletManeger,
+    manager: BulletManager,
   } | null)[]>(new Array(maximumBullet).fill(null));
   const bulletFlag = useRef<boolean[]>(new Array(maximumBullet).fill(false));
-  const setBulletManegersWrapper = (index: number, bulletManeger: BulletManeger | null) => {
+  const setBulletManagersWrapper = (index: number, bulletManager: BulletManager | null) => {
     let newObject = null;
-    if (bulletManeger !== null) {
+    if (bulletManager !== null) {
       newObject = {
         id: getNextBulletId(),
-        maneger: bulletManeger
+        manager: bulletManager
       }
     };
-    setBulletManegers((pre) => {
+    setBulletManagers((pre) => {
       const res = [...pre];
       res[index] = newObject;
       return res;
     });
-    bulletFlag.current[index] = (bulletManeger !== null);
+    bulletFlag.current[index] = (bulletManager !== null);
   };
   // 次の砲弾id
   const nextBulletId = useRef<number>(0);
@@ -49,30 +46,24 @@ function Enemy(props: {
   };
 
   useEffect(() => {
-    const first = () => {
-      const enemyManegers = props.globalProps.gameManeger.collisionManeger.enemyManegers;
-      if (enemyManegers[props.enemyManegerIndex] === null) {
-        return;
-      }
-      enemyManegers[props.enemyManegerIndex]!.moveData.position = {
-        x: props.startGrid.gridX * 32 - enemyManegers[props.enemyManegerIndex]!.moveData.size.width / 2,
-        y: props.startGrid.gridY * 32 - enemyManegers[props.enemyManegerIndex]!.moveData.size.height / 2,
-      };
-      intervalId.current = props.globalProps.addIntervalFunction(async () => {
-        if (props.globalProps.gameManeger.collisionManeger.playerManeger === null || enemyManegers[props.enemyManegerIndex] === null) {
-          if (intervalId.current !== null) {
-            clearInterval(intervalId.current);
-          }
-          return;
-        }
-        const [bulletManegerRes, enemyRes] = await invoke<[BulletManeger | null, EnemyManeger]>("enemy_move_auto", { 
-          enemyManeger: enemyManegers[props.enemyManegerIndex],
-          playerManeger: props.globalProps.gameManeger.collisionManeger.playerManeger,
-          gameManeger: props.globalProps.gameManeger
+    const enemyManagers = props.gameProps.gameManager.collisionManager.enemyManagers;
+    if (enemyManagers[props.enemyManagerIndex] === null) {
+      return;
+    }
+    enemyManagers[props.enemyManagerIndex]!.moveData.position = {
+      x: props.startGrid.gridX * 32 - enemyManagers[props.enemyManagerIndex]!.moveData.size.width / 2,
+      y: props.startGrid.gridY * 32 - enemyManagers[props.enemyManagerIndex]!.moveData.size.height / 2,
+    };
+    const clearTask = props.gameProps.addTask({
+      f: async () => {
+        const [bulletManagerRes, enemyRes] = await invoke<[BulletManager | null, EnemyManager]>("enemy_move_auto", { 
+          enemyManager: enemyManagers[props.enemyManagerIndex],
+          playerManager: props.gameProps.gameManager.collisionManager.playerManager,
+          gameManager: props.gameProps.gameManager
         });
-        enemyManegers[props.enemyManegerIndex] = enemyRes;
+        enemyManagers[props.enemyManagerIndex] = enemyRes;
         // 砲弾が発射されていたら砲弾を作成
-        if (bulletManegerRes !== null) {
+        if (bulletManagerRes !== null) {
           let nullIndex: number = 0;
           for (const v of bulletFlag.current) {
             if (!v) {
@@ -80,42 +71,40 @@ function Enemy(props: {
             }
             nullIndex += 1;
           }
-          if (nullIndex < bulletManegers.length) {
-            setBulletManegersWrapper(nullIndex, bulletManegerRes);
+          if (nullIndex < bulletManagers.length) {
+            setBulletManagersWrapper(nullIndex, bulletManagerRes);
           }
         }
         setObjectRenderingData({
           position: {
-            x: enemyManegers[props.enemyManegerIndex]!.moveData.position.x,
-            y: enemyManegers[props.enemyManegerIndex]!.moveData.position.y
+            x: enemyManagers[props.enemyManagerIndex]!.moveData.position.x,
+            y: enemyManagers[props.enemyManagerIndex]!.moveData.position.y
           },
-          angle: enemyManegers[props.enemyManegerIndex]!.moveData.angle
+          angle: enemyManagers[props.enemyManagerIndex]!.moveData.angle
         });
-      });
-    };
-    if (firstRendered.current) {
-      return;
-    }
-    firstRendered.current = true;
-    first();
+      }, 
+      priority: 5, 
+      memo: "enemy move(5)"
+    });
+    return clearTask;
   }, []);
 
   return (
     <div>
       {
-        bulletManegers.map((v, i) => (
+        bulletManagers.map((v, i) => (
           v === null
           ? <div key={100 + i}></div>
           : <Bullet 
-              initBulletManeger={v.maneger}
-              disappear={() => setBulletManegersWrapper(i, null)}
-              globalProps={props.globalProps}
+              initBulletManager={v.manager}
+              disappear={() => setBulletManagersWrapper(i, null)}
+              gameProps={props.gameProps}
               key={v.id}
             />
         ))
       }
       {
-        props.globalProps.gameManeger.collisionManeger.enemyManegers[props.enemyManegerIndex] === null
+        props.gameProps.gameManager.collisionManager.enemyManagers[props.enemyManagerIndex] === null
         ? <></>
         : <img 
             className="enemy" 
