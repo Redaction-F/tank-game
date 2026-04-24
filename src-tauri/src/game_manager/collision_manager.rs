@@ -4,26 +4,26 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     general::{Position, Size}, 
-    move_maneger::{EnemyManeger, PlayerManeger}, 
+    move_manager::{EnemyManager, PlayerManager}, 
     stage::{EnemyData, Grid, StageData}
 };
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
 /// Collision system. The manege collision of objects.
-pub struct CollisionManeger {
+pub(super) struct CollisionManager {
     #[serde(alias="_walls")]
     walls: Vec<HitBox>,
-    #[serde(alias="_playerManeger")]
-    player_maneger: PlayerManeger,
-    #[serde(alias="_enemyManegers")]
-    enemy_manegers: Vec<EnemyManeger>,
+    #[serde(alias="_playerManager")]
+    player_manager: PlayerManager,
+    #[serde(alias="_enemyManagers")]
+    enemy_managers: Vec<EnemyManager>,
     #[serde(alias="_stageSize")]
     stage_size: Size,
 }
 
-impl CollisionManeger {
-    pub fn from_stage(stage: &StageData) -> CollisionManeger {
+impl CollisionManager {
+    pub(super) fn from_stage(stage: &StageData) -> CollisionManager {
         let mut walls = Vec::new();
         for (i, row) in stage.get_grid_map().iter().enumerate() {
             for (j, v) in row.iter().enumerate() {
@@ -35,20 +35,20 @@ impl CollisionManeger {
                 }
             }
         }
-        let player_maneger: PlayerManeger = PlayerManeger::new(stage.start_grid().clone());
-        let enemy_manegers: Vec<EnemyManeger> = stage
+        let player_manager: PlayerManager = PlayerManager::new(stage.start_grid().clone());
+        let enemy_managers: Vec<EnemyManager> = stage
             .enemys()
             .iter()
-            .map(|v| <EnemyManeger as From<&EnemyData>>::from(v))
-            .collect::<Vec<EnemyManeger>>();
+            .map(|v| <EnemyManager as From<&EnemyData>>::from(v))
+            .collect::<Vec<EnemyManager>>();
         let stage_size: Size = Size::new( 
             HitBox::WALL_WIDTH * stage.get_grid_map().get(0).map(|v| v.len()).unwrap_or_default(),
             HitBox::WALL_HEIGHT * stage.get_grid_map().len(), 
         );
         Self { 
             walls, 
-            player_maneger, 
-            enemy_manegers, 
+            player_manager, 
+            enemy_managers, 
             stage_size 
         }
     }
@@ -104,12 +104,29 @@ impl CollisionManeger {
         }
     }
 
+    /// Check which direction `hit_box` hits walls or enemys from.
+    pub(super) fn object_hit_walls_or_enemys(&self, hit_box: &HitBox) -> HitDirection {
+        // enemy
+        let hit_enemy = self.enemy_managers
+            .iter()
+            .find_map(|v| match CollisionManager::hit(hit_box, &v.get_hit_box()) {
+                HitDirection::NoHit => None,
+                direction => {
+                    Some(direction)
+                }
+            });
+        if let Some(v) = hit_enemy {
+            return v;
+        }
+        self.object_hit_walls(hit_box)
+    }
+    
     /// Check which direction `hit_box` hits walls from.
-    pub fn object_hit_wall(&self, hit_box: &HitBox) -> HitDirection {
-        // wall in stage
+    pub(super) fn object_hit_walls(&self, hit_box: &HitBox) -> HitDirection {
+        // walls in stage
         let hit_stage_wall = self.walls
             .iter()
-            .find_map(|v| match CollisionManeger::hit(hit_box, v) {
+            .find_map(|v| match CollisionManager::hit(hit_box, v) {
                 HitDirection::NoHit => None,
                 direction => {
                     Some(direction)
@@ -131,7 +148,7 @@ impl CollisionManeger {
         HitDirection::NoHit
     }
 
-    pub fn ray_hit_wall(&self, ray_start: &Position, ray_end: &Position) -> bool {
+    pub(super) fn ray_hit_walls(&self, ray_start: &Position, ray_end: &Position) -> bool {
         let (start_point, end_point) = if ray_start.get_x() < ray_end.get_x() {
             (ray_start, ray_end)
         } else {
@@ -167,23 +184,33 @@ impl CollisionManeger {
         false
     }
 
-    pub fn object_hit_player(&self, hit_box: &HitBox) -> bool {
-        match CollisionManeger::hit(hit_box, &self.player_maneger.get_hit_box()) {
+    pub(super) fn object_hit_player(&self, hit_box: &HitBox) -> bool {
+        match CollisionManager::hit(hit_box, &self.player_manager.get_hit_box()) {
             HitDirection::NoHit => false,
             _ => true
         }
     }
 
-    pub fn object_hit_enemys(&self, hit_box: &HitBox) -> Option<usize> {
-        self.enemy_manegers
+    pub(super) fn object_hit_enemys(&self, hit_box: &HitBox) -> Option<usize> {
+        self.enemy_managers
             .iter()
             .enumerate()
             .find_map(|(i, v)| {
-                match CollisionManeger::hit(hit_box, &v.get_hit_box()) {
+                match CollisionManager::hit(hit_box, &v.get_hit_box()) {
                     HitDirection::NoHit => None,
                     _ => Some(i)
                 }
             })
+    }
+
+    pub(super) fn player_die(&mut self) {
+        self.player_manager.die();
+    }
+
+    pub(super) fn enemy_die(&mut self, index: usize) {
+        if let Some(enemy) = self.enemy_managers.get_mut(index) {
+            enemy.die();
+        }
     }
 }
 
@@ -236,7 +263,7 @@ impl From<(Position, Size)> for HitBox {
 #[derive(Debug)]
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
-/// Which direction a object hit another object from
+/// Which direction a object hits another object from
 pub enum HitDirection {
     Right,
     Left,

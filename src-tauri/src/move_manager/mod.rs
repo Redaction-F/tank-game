@@ -3,51 +3,57 @@ use std::f64::consts::PI;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    game_maneger::{GameManeger, HitBox, HitDirection}, 
+    game_manager::{GameManager, HitBox, HitDirection}, 
     general::{Position, Size}
 };
 
-mod player_maneger;
-mod bullet_maneger;
-mod enemy_maneger;
+mod player_manager;
+mod bullet_manager;
+mod enemy_manager;
 
-pub use player_maneger::PlayerManeger;
-pub use enemy_maneger::{EnemyManeger, EnemyTypeVariable};
+pub use player_manager::PlayerManager;
+pub use enemy_manager::{EnemyManager, EnemyTypeVariable};
 
 pub mod tauri_command {
     use crate::{
-        game_maneger::GameManeger, 
-        move_maneger::{bullet_maneger::{BulletManeger, HitTank}, enemy_maneger::EnemyManeger, player_maneger::PlayerManeger}
+        game_manager::GameManager, 
+        move_manager::{bullet_manager::BulletManager, enemy_manager::EnemyManager, player_manager::PlayerManager}
     };
 
     /// [[tauri command]]
     /// Read the controller and move player. This function should be called constantly.
-    /// * `player_maneger` - the player maneger
-    /// * `game_maneger` - the game maneger
+    /// * `player_manager` - the player manager
+    /// * `game_manager` - the game manager
     /// ## Return
-    /// Whether player moved or not, shot `BulletManeger`(if exist), updated `PlayerManeger`, and updated `GameManeger`.
+    /// Whether player moved or not, shot `BulletManager`(if exist), and updated `PlayerManager`
     #[tauri::command]
-    pub fn player_move_by_controller(mut player_maneger: PlayerManeger, mut game_maneger: GameManeger) -> (bool, Option<BulletManeger>, PlayerManeger, GameManeger) {
-        let res: (bool, Option<BulletManeger>) = player_maneger.move_by_controller(&mut game_maneger);
-        (res.0, res.1, player_maneger, game_maneger)
+    pub fn player_move_by_controller(mut player_manager: PlayerManager, game_manager: GameManager) -> (bool, Option<BulletManager>, PlayerManager) {
+        let res: (bool, Option<BulletManager>) = player_manager.move_by_controller(&game_manager);
+        (res.0, res.1, player_manager)
     }
 
+    /// [[tauri command]]
+    /// Move enemy automatically. This function should be called constantly.
+    /// * `enemy_manager` - the enemy manager
+    /// * `game_manager` - the game manager
+    /// ## Return
+    /// Whether player moved or not, shot `BulletManager`(if exist), and updated `PlayerManager`
     #[tauri::command]
-    pub fn enemy_move_auto(mut enemy_maneger: EnemyManeger, player_maneger: PlayerManeger, game_maneger: GameManeger) -> (Option<BulletManeger>, EnemyManeger) {
-        let res = enemy_maneger.move_auto(&player_maneger, &game_maneger);
-        (res, enemy_maneger)
+    pub fn enemy_move_auto(mut enemy_manager: EnemyManager, player_manager: PlayerManager, game_manager: GameManager) -> (Option<BulletManager>, EnemyManager) {
+        let res = enemy_manager.move_auto(&player_manager, &game_manager);
+        (res, enemy_manager)
     }
 
     /// [[tauri command]]
     /// Move bullet. This function should be called constantly.
-    /// * `bullet_maneger` - the bullet maneger
-    /// * `game_maneger` - the game maneger
+    /// * `bullet_manager` - the bullet manager
+    /// * `game_manager` - the game manager
     /// ## Return
-    /// Whether bullet disappeared or not, updated `BulletManeger`.
+    /// Whether bullet disappeared or not, updated `BulletManager` and updated `GameManager`.
     #[tauri::command]
-    pub fn bullet_move_forward(mut bullet_maneger: BulletManeger, game_maneger: GameManeger) -> (bool, HitTank, BulletManeger) {
-        let res: (bool, HitTank) = bullet_maneger.move_forward(&game_maneger);
-        (res.0, res.1, bullet_maneger)
+    pub fn bullet_move_forward(mut bullet_manager: BulletManager, mut game_manager: GameManager) -> (bool, BulletManager, GameManager) {
+        let res: bool = bullet_manager.move_forward(&mut game_manager);
+        (res, bullet_manager, game_manager)
     }
 }
 
@@ -130,17 +136,22 @@ impl MoveData {
     }
 }
 
-trait MoveManeger {
+trait MoveManager {
     /// Get a imutable reference of `MoveData` of the object.
     fn get_move_data(&self) -> &MoveData;
     /// Get a mutablereference　of `MoveData` of the object.
     fn get_move_data_mut(&mut self) -> &mut MoveData;
 
-    fn move_diff(&mut self, d: Position, game_maneger: &GameManeger) -> bool {
+    fn hit_object_in_stage(&self, game_manager: &GameManager) -> HitDirection {
+        game_manager.collision_object_hit_walls_or_enemys(&self.get_move_data().get_hit_box())
+    }
+
+    fn move_diff(&mut self, d: Position, game_manager: &GameManager) -> bool {
+        let pre_position: Position = self.get_move_data().get_position().clone();
+        self.get_move_data_mut().move_diff(d);
+        let hit: HitDirection = self.hit_object_in_stage(game_manager);
         let move_data: &mut MoveData = self.get_move_data_mut();
-        let pre_position: Position = move_data.get_position().clone();
-        move_data.move_diff(d);
-        match (game_maneger.collision_object_hit_wall(&move_data.get_hit_box()), move_data.get_move_type_mut()) {
+        match (hit, move_data.get_move_type_mut()) {
             (HitDirection::NoHit, _) => (),
             (_, MoveType::Hit) => *move_data.get_position_mut() = pre_position,
             (HitDirection::Right | HitDirection::Left, MoveType::Bounce(b)) => {
@@ -173,7 +184,7 @@ trait MoveManeger {
         });
     }
 
-    fn move_naturally(&mut self, gear: Gear, game_maneger: &GameManeger) -> bool {
+    fn move_naturally(&mut self, gear: Gear, game_manager: &GameManager) -> bool {
         let speed: f64 = self.get_move_data().get_speed();
         let d: Position = match gear {
             Gear::Front => {
@@ -189,7 +200,7 @@ trait MoveManeger {
                 )
             }
         };
-        self.move_diff(d, game_maneger)
+        self.move_diff(d, game_manager)
     }
 }
 

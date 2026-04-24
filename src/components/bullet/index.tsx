@@ -1,52 +1,45 @@
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { BulletManeger, HitTank, initBulletManeger } from "./logic";
+import { BulletManager, HitTank, initBulletManager } from "./logic";
 import { initObjectRenderingData, ObjectRenderingData } from "../player/logic";
 import "./style.css";
-import { GameProps } from "../game/logic";
+import { GameManager, GameProps } from "../game/logic";
 
 function Bullet(props: { 
-  initBulletManeger: BulletManeger,  
+  initBulletManager: BulletManager,  
   disappear: () => void,
   gameProps: GameProps
 }) {
   // 砲弾の位置と角度
   const [objectRenderingData, setObjectRenderingData] = useState<ObjectRenderingData>(initObjectRenderingData());
   // 砲弾管理オブジェクト
-  const bulletManeger = useRef<BulletManeger>(initBulletManeger());
+  const bulletManager = useRef<BulletManager>(initBulletManager());
   const disappear = () => {
     props.disappear();
   };
 
   useEffect(() => {
     // 砲弾管理オブジェクトを初期化
-    bulletManeger.current = props.initBulletManeger;
+    bulletManager.current = props.initBulletManager;
     // 砲弾の位置を更新
     setObjectRenderingData({
       position: {
-        x: Math.floor(bulletManeger.current.moveData.position.x),
-        y: Math.floor(bulletManeger.current.moveData.position.y),
+        x: Math.floor(bulletManager.current.moveData.position.x),
+        y: Math.floor(bulletManager.current.moveData.position.y),
       },
-      angle: Math.floor(bulletManeger.current.moveData.angle),
+      angle: Math.floor(bulletManager.current.moveData.angle),
     });
     // 砲弾の更新を定期実行
     const clearTask = props.gameProps.addTask({
       f: async () => {
         // 砲弾の更新
-        const [disappeared, hitTank, bulletManegerRes] = await invoke<[boolean, HitTank, BulletManeger]>("bullet_move_forward", { 
-          bulletManeger: bulletManeger.current, 
-          gameManeger: props.gameProps.gameManeger 
+        const [disappeared, bulletManagerRes, gameManagerRes] = await invoke<[boolean, BulletManager, GameManager]>("bullet_move_forward", { 
+          bulletManager: bulletManager.current, 
+          gameManager: props.gameProps.gameManager 
         });
-        if (hitTank !== "noHit") {
-          if (hitTank === "player") {
-            props.gameProps.gameManeger.collisionManeger.playerManeger.isDead = true;
-          } else {
-            props.gameProps.gameManeger.collisionManeger.enemyManegers[hitTank.enemy].isDead = true;
-            disappear();
-          }
-        }
+        props.gameProps.setGameManager(gameManagerRes);
         // 砲弾管理オブジェクトを更新
-        bulletManeger.current = bulletManegerRes;
+        bulletManager.current = bulletManagerRes;
         // 砲弾が消滅していたら
         if (disappeared) {
           disappear();
@@ -54,10 +47,10 @@ function Bullet(props: {
         // 砲弾の位置を更新
         setObjectRenderingData({
           position: {
-            x: Math.floor(bulletManeger.current.moveData.position.x),
-            y: Math.floor(bulletManeger.current.moveData.position.y),
+            x: Math.floor(bulletManager.current.moveData.position.x),
+            y: Math.floor(bulletManager.current.moveData.position.y),
           },
-          angle: Math.floor(bulletManeger.current.moveData.angle),
+          angle: Math.floor(bulletManager.current.moveData.angle),
         });
       }, 
       priority: 5, 

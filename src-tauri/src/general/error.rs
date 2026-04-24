@@ -39,7 +39,7 @@ impl Error {
         E: error::Error
     {
         Self::from_variant(variant, ErrorMsg { 
-            for_developers: format!("{}/original error: {}", for_developers, error), 
+            for_developers: format!("{}(original error: {})", for_developers, error), 
             for_users: for_users.to_string()
         })
     }

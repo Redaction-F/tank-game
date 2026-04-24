@@ -1,5 +1,5 @@
-import { EnemyManeger } from "../enemy/logic";
-import { initPlayerManeger, PlayerManeger } from "../player/logic";
+import { EnemyManager } from "../enemy/logic";
+import { initPlayerManager, PlayerManager } from "../player/logic";
 
 // ステージ
 type StageData = {
@@ -40,12 +40,12 @@ type EnemyData = {
 };
 
 // ゲーム管理データ
-type GameManeger = {
+type GameManager = {
   controller: Controller,
-  collisionManeger: CollisionManeger
+  collisionManager: CollisionManager
 };
 // ゲーム管理オプジェクトの初期化
-const emptyGameManeger = (): GameManeger => {
+const emptyGameManager = (): GameManager => {
   return {
     controller: {
       right: "waiting",
@@ -54,10 +54,10 @@ const emptyGameManeger = (): GameManeger => {
       up: "waiting",
       space: "waiting",
     },
-    collisionManeger: {
+    collisionManager: {
       walls: [],
-      playerManeger: initPlayerManeger(),
-      enemyManegers: [],
+      playerManager: initPlayerManager(),
+      enemyManagers: [],
       stageSize: {
         width: 0,
         height: 0
@@ -83,10 +83,10 @@ const initInputKey = (): InputKey => ({
   keyup: new Set()
 });
 // 衝突管理データ
-type CollisionManeger = {
+type CollisionManager = {
   walls: HitBox[],
-  playerManeger: PlayerManeger,
-  enemyManegers: EnemyManeger[],
+  playerManager: PlayerManager,
+  enemyManagers: EnemyManager[],
   stageSize: Size
 };
 // 当たり判定
@@ -154,12 +154,14 @@ const runTasks = async (tasks: TasksByPriority) => {
   // console.log(`RunTasks: ${memos.join("/")}`);
 }
 type GameProps = {
-  gameManeger: GameManeger,
+  gameManager: GameManager,
+  setGameManager: (value: GameManager) => void,
+  setGameManagerMap: (f: (value: GameManager) => void) => void,
   addTask: (newTask: Task) => (() => void),
 };
 
 export { 
-  type Controller, emptyGameManeger, type GameManeger, initInputKey, type InputKey, type Position,
+  type Controller, emptyGameManager, type GameManager, initInputKey, type InputKey, type Position,
   initStageData, gridMapCol, gridMapRow, type GridPosition, type StageData, 
   addTask, type GameProps, Phase, runTasks, type Task, type TasksByPriority
 }

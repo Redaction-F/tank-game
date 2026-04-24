@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { emptyGameManeger, GameManeger, GameProps, gridMapCol, gridMapRow, initStageData, Task, StageData, TasksByPriority, runTasks, addTask, Phase, InputKey, initInputKey } from "./logic";
+import { emptyGameManager, GameManager, GameProps, gridMapCol, gridMapRow, initStageData, Task, StageData, TasksByPriority, runTasks, addTask, Phase, InputKey, initInputKey } from "./logic";
 import { ResultKind } from "../result/logic";
 import StageAround from "./StageAround";
 import StageMain from "./StageMain";
@@ -12,11 +12,14 @@ function Game(props: {
   switchToGame: (resultKind: ResultKind) => void
 }) {
   // ゲーム管理データ
-  const gameManeger = useRef<GameManeger>(emptyGameManeger());
+  const gameManager = useRef<GameManager>(emptyGameManager());
   // ゲーム管理データの更新(object自体を更新しない)
-  const setGameManeger = (value: GameManeger) => {
-    gameManeger.current.collisionManeger = value.collisionManeger;
-    gameManeger.current.controller = value.controller;
+  const setGameManager = (value: GameManager) => {
+    gameManager.current.collisionManager = value.collisionManager;
+    gameManager.current.controller = value.controller;
+  };
+  const setGameManagerMap = (value: (value: GameManager) => void) => {
+    value(gameManager.current);
   };
   const inputKey = useRef<InputKey>(initInputKey());
   const addInputKey = (key: string, upDown: "up" | "down") => {
@@ -29,13 +32,13 @@ function Game(props: {
 
   // ステージのデータ
   const [stageData, setStageData] = useState<StageData>(initStageData());
-  const loadStageCache = useRef<[StageData, GameManeger] | null>(null);
+  const loadStageCache = useRef<[StageData, GameManager] | null>(null);
   const loadStage = async () => {
     if (loadStageCache.current !== null) {
       return loadStageCache.current;
     }
     // ステージを読み込み
-    return await invoke<[StageData, GameManeger]>(
+    return await invoke<[StageData, GameManager]>(
       "load_stage", 
       { 
         fileName: props.stageName
@@ -55,15 +58,17 @@ function Game(props: {
 
   // このコンポーネントの子に渡されるprops群
   const gameProps: GameProps = {
-    gameManeger: gameManeger.current,
+    gameManager: gameManager.current,
+    setGameManager,
+    setGameManagerMap,
     addTask: (newTask: Task) => (addTask(tasks.current, newTask))
   };
 
   useEffect(() => {
     (async () => {
-      const [stageRes, gameManegerRes] = await loadStage();
+      const [stageRes, gameManagerRes] = await loadStage();
       // ゲーム管理データを更新
-      setGameManeger(gameManegerRes);
+      setGameManager(gameManagerRes);
       // ステージデータを更新
       setStageData(stageRes)
     })();
@@ -85,15 +90,15 @@ function Game(props: {
         inputKey.current.keydown.clear();
         const keyupArray = Array.from(inputKey.current.keyup);
         inputKey.current.keyup.clear();
-        const gameManegerRes = await invoke<GameManeger>(
+        const gameManagerRes = await invoke<GameManager>(
           "controller_update",
           {
-            gameManeger: gameManeger.current,
+            gameManager: gameManager.current,
             keydown: keydownArray,
             keyup: keyupArray
           }
         );
-        setGameManeger(gameManegerRes);
+        setGameManager(gameManagerRes);
       },
       priority: Phase.Input,
       memo: "read controller(Input)"
@@ -103,11 +108,11 @@ function Game(props: {
     const clearTask2 = gameProps.addTask({
       f: () => {
         // 敵が全ていなくなったら
-        if (gameManeger.current.collisionManeger.enemyManegers.every((v) => v.isDead)) {
+        if (gameManager.current.collisionManager.enemyManagers.every((v) => v.isDead)) {
           finishGame("clear");
         }
         // 自分がいなくなったら
-        if (gameManeger.current.collisionManeger.playerManeger.isDead) {
+        if (gameManager.current.collisionManager.playerManager.isDead) {
           finishGame("gameover");
         }
       }, 

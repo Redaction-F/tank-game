@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { initObjectRenderingData, ObjectRenderingData, PlayerManeger } from "./logic"
-import { BulletManeger } from "../bullet/logic";
-import { GameManeger, GameProps, GridPosition, Phase } from "../game/logic";
+import { initObjectRenderingData, ObjectRenderingData, PlayerManager } from "./logic"
+import { BulletManager } from "../bullet/logic";
+import { GameProps, GridPosition, Phase } from "../game/logic";
 import Bullet from "../bullet";
 import "./style.css";
 
@@ -13,34 +13,43 @@ function Player(props: {
 }) {
   // プレイヤーの位置と角度
   const [objectRenderingData, setObjectRenderingData] = useState<ObjectRenderingData>(initObjectRenderingData());
-  const setPlayerManeger = (value: PlayerManeger) => {
-    props.gameProps.gameManeger.collisionManeger.playerManeger.moveData = value.moveData;
-    props.gameProps.gameManeger.collisionManeger.playerManeger.isDead = value.isDead;
+  const setPlayerManager = (value: PlayerManager) => {
+    props.gameProps.setGameManagerMap((v) => {
+      v.collisionManager.playerManager.moveData = value.moveData;
+      v.collisionManager.playerManager.isDead = value.isDead;
+    });
+    setObjectRenderingData({
+      position: {
+        x: value.moveData.position.x,
+        y: value.moveData.position.y
+      },
+      angle: value.moveData.angle
+    });
   };
   // 砲弾最大数
   const maximumBullet: number = 2;
   // 砲弾管理データ群
-  const [bulletManegers, setBulletManegers] = useState<({
+  const [bulletManagers, setBulletManagers] = useState<({
     id: number,
-    maneger: BulletManeger,
+    manager: BulletManager,
   } | null)[]>(new Array(maximumBullet).fill(null));
   // 砲弾が存在するかのフラグ(すぐに更新するためにuseRefで別に持つ)
   const bulletFlag = useRef<boolean[]>(new Array(maximumBullet).fill(false));
   // 砲弾を発射する
-  const shootBullet = (index: number, bulletManeger: BulletManeger | null) => {
+  const shootBullet = (index: number, bulletManager: BulletManager | null) => {
     let newObject = null;
-    if (bulletManeger !== null) {
+    if (bulletManager !== null) {
       newObject = {
         id: getNextBulletId(),
-        maneger: bulletManeger
+        manager: bulletManager
       }
     };
-    setBulletManegers((pre) => {
+    setBulletManagers((pre) => {
       const res = [...pre];
       res[index] = newObject;
       return res;
     });
-    bulletFlag.current[index] = (bulletManeger !== null);
+    bulletFlag.current[index] = (bulletManager !== null);
   };
   // 次の砲弾id
   const nextBulletId = useRef<number>(0);
@@ -55,10 +64,10 @@ function Player(props: {
   useEffect(() => {
     // 初期位置を決定
     const startPosition = {
-      x: props.startGrid.gridX * 32 - props.gameProps.gameManeger.collisionManeger.playerManeger.moveData.size.width / 2,
-      y: props.startGrid.gridY * 32 - props.gameProps.gameManeger.collisionManeger.playerManeger.moveData.size.height / 2,
+      x: props.startGrid.gridX * 32 - props.gameProps.gameManager.collisionManager.playerManager.moveData.size.width / 2,
+      y: props.startGrid.gridY * 32 - props.gameProps.gameManager.collisionManager.playerManager.moveData.size.height / 2,
     };
-    props.gameProps.gameManeger.collisionManeger.playerManeger.moveData.position = startPosition;
+    props.gameProps.setGameManagerMap((v) => v.collisionManager.playerManager.moveData.position = startPosition);
     setObjectRenderingData({
       position: startPosition,
       angle: 0
@@ -67,13 +76,13 @@ function Player(props: {
     const clearTask = props.gameProps.addTask({
       f: async () => {
         // コントローラを読む
-        const [rendering, bulletManegerRes, playerManegerRes, gameManegerRes] = 
-          await invoke<[boolean, BulletManeger | null, PlayerManeger, GameManeger]>("player_move_by_controller", {
-            playerManeger: props.gameProps.gameManeger.collisionManeger.playerManeger, 
-            gameManeger: props.gameProps.gameManeger
+        const [rendering, bulletManagerRes, playerManagerRes] = 
+          await invoke<[boolean, BulletManager | null, PlayerManager]>("player_move_by_controller", {
+            playerManager: props.gameProps.gameManager.collisionManager.playerManager, 
+            gameManager: props.gameProps.gameManager
           });
         // 砲弾が発射されていたら砲弾を作成
-        if (bulletManegerRes !== null) {
+        if (bulletManagerRes !== null) {
           let nullIndex: number = 0;
           for (const v of bulletFlag.current) {
             if (!v) {
@@ -81,8 +90,8 @@ function Player(props: {
             }
             nullIndex += 1;
           }
-          if (nullIndex < bulletManegers.length) {
-            shootBullet(nullIndex, bulletManegerRes);
+          if (nullIndex < bulletManagers.length) {
+            shootBullet(nullIndex, bulletManagerRes);
           }
         }
         // 動いていないなら残りを飛ばす
@@ -90,15 +99,7 @@ function Player(props: {
           return;
         }
         // プレイヤー管理オブジェクトを更新
-        setPlayerManeger(playerManegerRes);
-        // プレイヤーの位置を更新
-        setObjectRenderingData({
-          position: {
-            x: playerManegerRes.moveData.position.x,
-            y: playerManegerRes.moveData.position.y,
-          },
-          angle: playerManegerRes.moveData.angle,
-        });
+        setPlayerManager(playerManagerRes);
       }, 
       priority: Phase.Update2, 
       memo: "player move(5)"
@@ -109,13 +110,13 @@ function Player(props: {
   return (
     <div>
       {
-        bulletManegers
+        bulletManagers
           .map((v, i) => {
             if (v === null) {
               return <div key={100 + i}></div>
             } else {
               return <Bullet 
-                initBulletManeger={v.maneger} 
+                initBulletManager={v.manager} 
                 disappear={() => shootBullet(i, null)}
                 gameProps={props.gameProps}
                 key={v.id}

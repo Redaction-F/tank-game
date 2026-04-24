@@ -1,6 +1,6 @@
 import { Position } from "../game/logic";
 
-type PlayerManeger = {
+type PlayerManager = {
   moveData: {
     // 位置
     position: Position,
@@ -15,7 +15,7 @@ type PlayerManeger = {
   },
   isDead: boolean
 };
-const initPlayerManeger = (): PlayerManeger => {
+const initPlayerManager = (): PlayerManager => {
   return {
     moveData: {
       position: {
@@ -48,4 +48,4 @@ const initObjectRenderingData = (): ObjectRenderingData => {
   };
 };
 
-export { initObjectRenderingData, initPlayerManeger, type ObjectRenderingData, type PlayerManeger };
+export { initObjectRenderingData, initPlayerManager, type ObjectRenderingData, type PlayerManager };

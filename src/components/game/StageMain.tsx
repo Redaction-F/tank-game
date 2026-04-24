@@ -36,7 +36,7 @@ function StageMain(props: {
         props.stage.enemys.map((v, i) => (
           <Enemy
             startGrid={v.startGrid}
-            enemyManegerIndex={i}
+            enemyManagerIndex={i}
             gameProps={props.gameProps}
             key={props.stage.stageId * 10 + i}
           />

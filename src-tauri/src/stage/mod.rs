@@ -1,13 +1,13 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{general::Position, move_maneger::EnemyTypeVariable};
+use crate::{general::Position, move_manager::EnemyTypeVariable};
 
 pub mod tauri_command {
     use std::fs;
     use log::error;
 
     use crate::{
-        game_maneger::GameManeger, 
+        game_manager::GameManager, 
         general::{Error, ErrorVariant}, 
         stage::StageData
     };
@@ -16,11 +16,11 @@ pub mod tauri_command {
     /// 
     /// Read json file and get `StageData`.
     /// * `file_name` - a name of file which have stage data
-    /// * `game_maneger` - the game maneger
+    /// * `game_manager` - the game manager
     /// ## Return
-    /// Leaded `StageData` and updated `game_maneger`. If failed, return `Err(Error)`.
+    /// Leaded `StageData` and updated `game_manager`. If failed, return `Err(Error)`.
     #[tauri::command]
-    pub fn load_stage(file_name: String) -> Result<(StageData, GameManeger), Error> {
+    pub fn load_stage(file_name: String) -> Result<(StageData, GameManager), Error> {
         let path_name: String = format!("./resourse/stage/stage_{}.json", file_name);
         let f: String = fs::read_to_string(path_name)
             .map_err(|e| {
@@ -44,8 +44,8 @@ pub mod tauri_command {
                 error!("{}", e);
                 e
             })?;
-        let game_maneger: GameManeger = GameManeger::from_stage(&stage);
-        Ok((stage, game_maneger))
+        let game_manager: GameManager = GameManager::from_stage(&stage);
+        Ok((stage, game_manager))
     }
 }
 

@@ -1,6 +1,6 @@
 import { Position } from "../../logic"
 
-type BulletManeger = {
+type BulletManager = {
   moveData: {
     // 位置
     position: Position,
@@ -19,7 +19,7 @@ type BulletManeger = {
     speed: 4.0
   }
 };
-const initBulletManeger = (): BulletManeger => {
+const initBulletManager = (): BulletManager => {
   return {
     moveData: {
       position: {
@@ -46,4 +46,4 @@ type HitTank = "player" | {
   enemy: number
 } | "noHit";
 
-export { type BulletManeger, initBulletManeger, type HitTank }
+export { type BulletManager, initBulletManager, type HitTank }

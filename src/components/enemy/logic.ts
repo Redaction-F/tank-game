@@ -1,6 +1,6 @@
 import { Position } from "../game/logic";
 
-type EnemyManeger = {
+type EnemyManager = {
   moveData: {
     // 位置
     position: Position,
@@ -24,4 +24,4 @@ type EnemyType = {
   }
 };
 
-export { type EnemyManeger };
+export { type EnemyManager };
