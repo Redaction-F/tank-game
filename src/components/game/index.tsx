@@ -19,6 +19,13 @@ function Game(props: {
     gameManeger.current.controller = value.controller;
   };
   const inputKey = useRef<InputKey>(initInputKey());
+  const addInputKey = (key: string, upDown: "up" | "down") => {
+    if (upDown === "down") {
+      inputKey.current.keydown.add(key);
+    } else {
+      inputKey.current.keyup.add(key);
+    }
+  };
 
   // ステージのデータ
   const [stageData, setStageData] = useState<StageData>(initStageData());
@@ -38,9 +45,6 @@ function Game(props: {
 
   // ゲームの終了
   const finishGame = (result: ResultKind) => {
-    if (intervalId.current !== null) {
-      clearInterval(intervalId.current);
-    }
     props.switchToGame(result);
   };
 
@@ -56,9 +60,6 @@ function Game(props: {
   };
 
   useEffect(() => {
-    // 定期実行する関数群を実行開始
-    intervalId.current = setInterval(() => {runTasks(tasks.current)}, 20);
-
     (async () => {
       const [stageRes, gameManegerRes] = await loadStage();
       // ゲーム管理データを更新
@@ -68,34 +69,38 @@ function Game(props: {
     })();
 
     const keydownEvent = (e: KeyboardEvent) => {
-      inputKey.current.keydown.add(e.key);
+      console.log(`keydown: ${e.key}`);
+      addInputKey(e.key, "down");
     };
     const keyupEvent = (e: KeyboardEvent) => {
-      inputKey.current.keyup.add(e.key);
+      console.log(`keyup: ${e.key}`);
+      addInputKey(e.key, "up");
     };
     // キー入力に対するイベントを設定
     document.addEventListener("keydown", keydownEvent, false);
     document.addEventListener("keyup", keyupEvent, false);
-    const cleanTask1 = gameProps.addTask({
+    const clearTask1 = gameProps.addTask({
       f: async () => {
+        const keydownArray = Array.from(inputKey.current.keydown);
+        inputKey.current.keydown.clear();
+        const keyupArray = Array.from(inputKey.current.keyup);
+        inputKey.current.keyup.clear();
         const gameManegerRes = await invoke<GameManeger>(
           "controller_update",
           {
             gameManeger: gameManeger.current,
-            keydown: Array.from(inputKey.current.keydown),
-            keyup: Array.from(inputKey.current.keyup)
+            keydown: keydownArray,
+            keyup: keyupArray
           }
         );
         setGameManeger(gameManegerRes);
-        inputKey.current.keydown.clear();
-        inputKey.current.keyup.clear();
       },
       priority: Phase.Input,
       memo: "read controller(Input)"
     });
     
     // ゲーム終了を監視する定期実行関数
-    const cleanTask2 = gameProps.addTask({
+    const clearTask2 = gameProps.addTask({
       f: () => {
         // 敵が全ていなくなったら
         if (gameManeger.current.collisionManeger.enemyManegers.every((v) => v.isDead)) {
@@ -110,11 +115,17 @@ function Game(props: {
       memo: "check end(RunFinally)"
     });
 
+    // 定期実行する関数群を実行開始
+    intervalId.current = setInterval(() => {runTasks(tasks.current)}, 20);
+
     return () => {
-      cleanTask1();
-      cleanTask2();
-      document.removeEventListener("keydown", keydownEvent);
-      document.removeEventListener("keyup", keyupEvent);
+      clearTask1();
+      clearTask2();
+      if (intervalId.current !== null) {
+        clearInterval(intervalId.current);
+      }
+      document.removeEventListener("keydown", keydownEvent, false);
+      document.removeEventListener("keyup", keyupEvent, false);
     };
   }, []);
 

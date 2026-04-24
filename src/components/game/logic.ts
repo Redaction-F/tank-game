@@ -117,7 +117,7 @@ enum Phase {
   RunFinally = 7
 };
 type Task = {
-  f: () => void,
+  f: (() => void) | (() => Promise<void>),
   priority: Phase,
   memo: string
 };
@@ -139,19 +139,19 @@ const addTask = (tasks: TasksByPriority, newTask: Task): (() => void) => {
   }
 };
 // 定期実行する関数群を一度ずつ実行
-const runTasks = (tasks: TasksByPriority) => {
-  let memos: string[] = []
+const runTasks = async (tasks: TasksByPriority) => {
+  const memos: string[] = []
   for (const phase of Object.entries(Phase).map(([_, v]) => (v)).filter((v) => (typeof v === "number"))) {
     const bucket = tasks.get(phase);
     if (bucket === undefined) {
       continue;
     }
     for (const task of bucket) {
-      task.f();
+      await task.f();
       memos.push(task.memo);
     }
   }
-  console.log(`RunTasks: ${memos.join("/")}`);
+  // console.log(`RunTasks: ${memos.join("/")}`);
 }
 type GameProps = {
   gameManeger: GameManeger,
