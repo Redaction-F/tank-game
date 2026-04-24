@@ -1,4 +1,4 @@
-import { Position } from "../../logic"
+import { Position } from "../game/logic";
 
 type BulletManager = {
   moveData: {
@@ -42,8 +42,4 @@ const initBulletManager = (): BulletManager => {
   };
 };
 
-type HitTank = "player" | {
-  enemy: number
-} | "noHit";
-
-export { type BulletManager, initBulletManager, type HitTank }
+export { type BulletManager, initBulletManager }

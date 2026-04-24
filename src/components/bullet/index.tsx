@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { BulletManager, HitTank, initBulletManager } from "./logic";
+import { BulletManager, initBulletManager } from "./logic";
 import { initObjectRenderingData, ObjectRenderingData } from "../player/logic";
 import "./style.css";
 import { GameManager, GameProps } from "../game/logic";
